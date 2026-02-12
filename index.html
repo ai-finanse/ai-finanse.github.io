@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI FINANSE</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--brand:#0066FF;--brand-dark:#0052CC;--brand-light:#E6F0FF;--green:#00C48C;--green-bg:#E6FAF3;--red:#FF4757;--red-bg:#FFE8EB;--orange:#FF9F43;--orange-bg:#FFF4E6;--bg:#F0F2F5;--card:#FFF;--text:#1A1D21;--text2:#6B7280;--text3:#9CA3AF;--border:#E5E7EB;--input-bg:#F9FAFB;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--radius:14px;--radius-sm:10px;--header-bg:#2D3239}
+        body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+        input,textarea,select{caret-color:#1A1D21!important;color:#1A1D21!important}
+        .header{background:var(--header-bg);padding:18px 20px;text-align:center;position:sticky;top:0;z-index:100}
+        .header-logo{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:#fff;letter-spacing:1.5px}
+        .header-logo span{color:rgba(255,255,255,.35);font-weight:400}
+        .debug-banner{background:#FFF3CD;color:#856404;padding:6px 16px;font-size:11px;text-align:center;font-family:'JetBrains Mono',monospace}
+        .container{padding:16px;max-width:480px;margin:0 auto}
+        .screen{display:none}.screen.active{display:block;animation:slideIn .25s ease-out}
+        @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:12px;box-shadow:var(--shadow)}
+        .card-title{font-size:15px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+        .card-title .icon{font-size:18px}
+        .form-group{margin-bottom:14px}
+        .form-label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px}
+        .form-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:16px;font-family:inherit;background:var(--input-bg);color:var(--text)!important;caret-color:#1A1D21!important;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+        .form-input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,102,255,.12);background:#fff}
+        .form-input::placeholder{color:var(--text3)}
+        .form-input.readonly{background:#eee;color:var(--text3)!important}
+        select.form-input{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .checkbox-row{display:flex;align-items:center;gap:10px;padding:12px 0}
+        .checkbox-row input[type="checkbox"]{width:20px;height:20px;accent-color:var(--brand);cursor:pointer}
+        .checkbox-row label{font-size:14px;font-weight:500;color:var(--text);cursor:pointer}
+        .netto-display{background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text2);margin-top:6px}
+        .netto-display strong{color:var(--text);font-family:'JetBrains Mono',monospace}
+        .code-wrapper{display:flex;flex-direction:column;align-items:center;padding:40px 20px}
+        .code-icon{font-size:56px;margin-bottom:20px}.code-title{font-size:22px;font-weight:700;margin-bottom:8px}
+        .code-subtitle{font-size:14px;color:var(--text2);margin-bottom:32px}
+        .code-inputs{display:flex;gap:8px;margin-bottom:24px}
+        .code-digit{width:48px;height:56px;border:2px solid var(--border);border-radius:var(--radius-sm);text-align:center;font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;background:var(--input-bg);color:var(--text)!important;caret-color:#1A1D21!important;transition:all .2s;-webkit-appearance:none}
+        .code-digit:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,102,255,.15);background:#fff}
+        .code-digit.filled{border-color:var(--brand);background:var(--brand-light)}
+        .code-digit.error-shake{border-color:var(--red);animation:shake .4s ease}
+        @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+        .forgot-link{font-size:14px;color:var(--brand);cursor:pointer;font-weight:500;border:none;background:none;padding:8px}
+        .btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:active{transform:scale(.98)}.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .btn-primary{background:var(--brand);color:#fff}.btn-secondary{background:var(--input-bg);color:var(--text);border:1.5px solid var(--border)}
+        .btn-green{background:var(--green);color:#fff}.btn-outline{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+        .btn .btn-icon{font-size:18px}.btn+.btn{margin-top:10px}
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+        .stat-box{background:var(--input-bg);border-radius:var(--radius-sm);padding:16px 14px;text-align:center;border:1px solid var(--border)}
+        .stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+        .stat-value{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700}
+        .stat-value.blue{color:var(--brand)}.stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.orange{color:var(--orange)}
+        .menu-grid{display:flex;flex-direction:column;gap:8px}
+        .menu-btn{display:flex;align-items:center;gap:14px;padding:16px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .15s}
+        .menu-btn:active{transform:scale(.98);background:var(--input-bg)}
+        .menu-btn .m-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+        .menu-btn .m-icon.blue{background:var(--brand-light)}.menu-btn .m-icon.green{background:var(--green-bg)}.menu-btn .m-icon.orange{background:var(--orange-bg)}
+        .menu-btn .m-text{flex:1}.menu-btn .m-title{font-size:15px;font-weight:600}.menu-btn .m-desc{font-size:12px;color:var(--text2);margin-top:2px}.menu-btn .m-arrow{color:var(--text3);font-size:18px}
+        .upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
+        .upload-zone:active{border-color:var(--brand);background:var(--brand-light)}
+        .upload-zone .uz-icon{font-size:40px;margin-bottom:10px}.upload-zone .uz-text{font-size:15px;font-weight:500;color:var(--text2)}.upload-zone .uz-hint{font-size:12px;color:var(--text3);margin-top:6px}
+        .upload-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px}
+        .upload-action-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--input-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--text2)}
+        .upload-action-btn:active{background:var(--brand-light);border-color:var(--brand)}.upload-action-btn .ua-icon{font-size:24px}
+        .doc-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--input-bg);border-radius:var(--radius-sm);margin-bottom:6px}
+        .doc-item .di-icon{font-size:22px}.doc-item .di-name{font-size:14px;font-weight:500}.doc-item .di-date{font-size:11px;color:var(--text3)}
+        .chat-box{height:400px;overflow-y:auto;padding:14px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:12px}
+        .msg{max-width:82%;padding:10px 14px;border-radius:14px;margin-bottom:8px;font-size:14px;line-height:1.45;word-wrap:break-word;color:var(--text)}
+        .msg.client{background:#E8EAED;margin-left:auto;border-bottom-right-radius:4px}
+        .msg.manager{background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px}
+        .msg-sender{font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text2)}
+        .msg-time{font-size:10px;margin-top:4px;color:var(--text3)}
+        .msg-typing{display:flex;gap:4px;padding:8px 0}
+        .msg-typing span{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:typing 1.2s infinite}
+        .msg-typing span:nth-child(2){animation-delay:.2s}
+        .msg-typing span:nth-child(3){animation-delay:.4s}
+        @keyframes typing{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+        .chat-input-row{display:flex;gap:8px;align-items:flex-end}
+        .chat-input-row textarea{flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;resize:none;background:var(--input-bg);color:var(--text)!important;caret-color:#1A1D21!important}
+        .chat-input-row textarea:focus{outline:none;border-color:var(--brand)}
+        .chat-send-btn{width:48px;height:48px;border-radius:var(--radius-sm);border:none;background:var(--brand);color:#fff;font-size:20px;cursor:pointer;flex-shrink:0}
+        .chat-voice-btn{width:48px;height:48px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--input-bg);color:var(--text2);font-size:20px;cursor:pointer;flex-shrink:0;transition:all .2s}
+        .chat-voice-btn.recording{background:var(--red);color:#fff;border-color:var(--red);animation:pulse 1s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+        .voice-timer{font-size:13px;color:var(--red);font-weight:600;font-family:'JetBrains Mono',monospace;margin-bottom:8px;text-align:center;display:none}
+        .toggle-row{display:flex;background:var(--input-bg);border-radius:var(--radius-sm);padding:4px;margin-bottom:16px;border:1px solid var(--border)}
+        .toggle-opt{flex:1;padding:10px;text-align:center;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;background:transparent;font-family:inherit;color:var(--text2)}
+        .toggle-opt.active{background:var(--brand);color:#fff;box-shadow:var(--shadow)}
+        .invoice-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+        .alert-toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;z-index:999;max-width:90%;text-align:center;animation:toastIn .3s ease,toastOut .3s ease 2.7s forwards}
+        .alert-toast.success{background:var(--green);color:#fff}.alert-toast.error{background:var(--red);color:#fff}.alert-toast.info{background:var(--brand);color:#fff}
+        @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        @keyframes toastOut{from{opacity:1}to{opacity:0}}
+        .divider{height:1px;background:var(--border);margin:16px 0}
+        .info-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
+        .info-row:last-child{border-bottom:none}.info-row .ir-label{font-size:14px;color:var(--text2)}.info-row .ir-value{font-size:14px;font-weight:600}
+        .back-row{margin-top:8px}
+        .search-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;max-height:200px;overflow-y:auto;display:none}
+        .search-dropdown.visible{display:block}
+        .search-dropdown-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);font-size:14px}
+        .search-dropdown-item:last-child{border-bottom:none}.search-dropdown-item:active{background:var(--brand-light)}
+        .search-dropdown-item .sdi-name{font-weight:600}.search-dropdown-item .sdi-nip{font-size:12px;color:var(--text3)}
+        .decl-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--input-bg);border-radius:var(--radius-sm);margin-bottom:6px}
+        .decl-item .decl-id{font-size:14px;font-weight:600}.decl-item .decl-month{font-size:12px;color:var(--text2)}
+        .decl-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+        .decl-badge.sent{background:var(--green-bg);color:var(--green)}.decl-badge.pending{background:var(--orange-bg);color:var(--orange)}
+        .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+        .modal-box{background:var(--card);border-radius:var(--radius);padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+        .modal-title{font-size:18px;font-weight:700;margin-bottom:16px}
+    </style>
+</head>
+<body>
+<div class="header"><div class="header-logo">AI <span>|</span> FINANSE</div></div>
+<div class="debug-banner" id="debugBanner"></div>
+<div class="container">
+    <div id="page-login" class="screen active"><div class="card"><div class="code-wrapper">
+        <div class="code-icon">🔐</div><div class="code-title">Введите код</div><div class="code-subtitle">6-значный код доступа</div>
+        <div class="code-inputs" id="codeInputs"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off"><input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off"></div>
+        <button class="forgot-link" onclick="showScreen('page-forgot')">Забыли код?</button>
+    </div></div></div>
+    <div id="page-forgot" class="screen"><div class="card"><div class="card-title"><span class="icon">🔑</span> Восстановление</div><div class="form-group"><label class="form-label">NIP компании</label><input type="tel" class="form-input" id="forgotNip" placeholder="0000000000" maxlength="10" inputmode="numeric"></div><div class="form-group"><label class="form-label">PESEL владельца</label><input type="tel" class="form-input" id="forgotPesel" placeholder="00000000000" maxlength="11" inputmode="numeric"></div><button class="btn btn-primary" onclick="verifyIdentity()"><span class="btn-icon">✓</span> Подтвердить</button></div><div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-login')"><span class="btn-icon">←</span> Назад</button></div></div>
+    <div id="page-newcode" class="screen"><div class="card"><div class="card-title"><span class="icon">🔒</span> Новый код</div><div class="form-group"><label class="form-label">Новый код (6 цифр)</label><input type="tel" class="form-input" id="newCode" maxlength="6" inputmode="numeric" style="font-family:'JetBrains Mono',monospace;letter-spacing:8px;text-align:center;font-size:24px;"></div><div class="form-group"><label class="form-label">Подтвердите</label><input type="tel" class="form-input" id="confirmCode" maxlength="6" inputmode="numeric" style="font-family:'JetBrains Mono',monospace;letter-spacing:8px;text-align:center;font-size:24px;"></div><button class="btn btn-primary" onclick="saveNewCode()"><span class="btn-icon">💾</span> Сохранить</button></div></div>
+    <div id="page-company" class="screen"><div class="card"><div class="card-title"><span class="icon">🏢</span> Данные компании</div><div class="form-group"><label class="form-label">Название</label><input type="text" class="form-input" id="compName" placeholder="Nazwa firmy"></div><div class="form-group"><label class="form-label">E-mail</label><input type="email" class="form-input" id="compEmail" placeholder="firma@example.com"></div><div class="divider"></div><div class="form-group"><label class="form-label">Улица</label><input type="text" class="form-input" id="compStreet"></div><div class="form-row"><div class="form-group"><label class="form-label">Дом</label><input type="text" class="form-input" id="compBuilding"></div><div class="form-group"><label class="form-label">Индекс</label><input type="text" class="form-input" id="compZip" maxlength="6"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Город</label><input type="text" class="form-input" id="compCity"></div><div class="form-group"><label class="form-label">Страна</label><select class="form-input" id="compCountry"><option value="PL">Polska</option><option value="DE">Niemcy</option><option value="UA">Ukraina</option><option value="OTHER">Inne</option></select></div></div><div class="divider"></div><div class="form-group"><label class="form-label">NIP</label><input type="tel" class="form-input readonly" id="compNip" readonly></div><div class="form-group"><label class="form-label">IBAN</label><input type="text" class="form-input" id="compIban"></div><div class="form-group" id="swiftGroup" style="display:none;"><label class="form-label">SWIFT</label><input type="text" class="form-input" id="compSwift"></div><div class="form-group"><label class="form-label">PKD</label><input type="text" class="form-input" id="compPkd"></div></div><button class="btn btn-primary" onclick="saveCompanyData()"><span class="btn-icon">💾</span> Сохранить</button><button class="btn btn-secondary" onclick="showScreen('page-dashboard')" id="compBackBtn" style="display:none;"><span class="btn-icon">←</span> Назад</button></div>
+    <div id="page-dashboard" class="screen"><div class="card"><div class="card-title"><span class="icon">📊</span> Финансы — <span id="dashMonth"></span></div><div class="stats-grid"><div class="stat-box"><div class="stat-label">Приход</div><div class="stat-value green" id="dPrihod">0 zł</div></div><div class="stat-box"><div class="stat-label">Расход</div><div class="stat-value red" id="dRashod">0 zł</div></div><div class="stat-box"><div class="stat-label">Доход</div><div class="stat-value blue" id="dDohod">0 zł</div></div><div class="stat-box"><div class="stat-label">НДС</div><div class="stat-value orange" id="dVat">0 zł</div></div><div class="stat-box"><div class="stat-label">PIT</div><div class="stat-value blue" id="dPit">0 zł</div></div><div class="stat-box"><div class="stat-label">ZUS</div><div class="stat-value blue" id="dZus">0 zł</div></div></div></div><div class="menu-grid"><div class="menu-btn" onclick="showScreen('page-invoice')"><div class="m-icon green">📝</div><div class="m-text"><div class="m-title">Выписать счёт</div><div class="m-desc">Фактура или проформа</div></div><div class="m-arrow">›</div></div><div class="menu-btn" onclick="showScreen('page-upload')"><div class="m-icon blue">📤</div><div class="m-text"><div class="m-title">Выслать документы</div><div class="m-desc">Фото, сканы, PDF</div></div><div class="m-arrow">›</div></div><div class="menu-btn" onclick="showScreen('page-chat')"><div class="m-icon orange">💬</div><div class="m-text"><div class="m-title">AI Ассистент</div><div class="m-desc">Текст или голосовое</div></div><div class="m-arrow">›</div></div><div class="menu-btn" onclick="showScreen('page-info')"><div class="m-icon blue">📋</div><div class="m-text"><div class="m-title">Полная информация</div><div class="m-desc">Тариф, декларации</div></div><div class="m-arrow">›</div></div></div></div>
+    <div id="page-upload" class="screen"><div class="card"><div class="card-title"><span class="icon">📤</span> Выслать документы</div><input type="file" id="fileGallery" accept="image/*" style="display:none" multiple><input type="file" id="fileCamera" accept="image/*" capture="environment" style="display:none"><input type="file" id="fileFiles" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" style="display:none" multiple><div class="upload-zone" onclick="document.getElementById('fileFiles').click()"><div class="uz-icon">📁</div><div class="uz-text">Нажмите для загрузки</div><div class="uz-hint">Фото, сканы, PDF — до 5 МБ</div></div><div class="upload-actions"><button class="upload-action-btn" onclick="document.getElementById('fileGallery').click()"><span class="ua-icon">🖼</span>Медиатека</button><button class="upload-action-btn" onclick="document.getElementById('fileCamera').click()"><span class="ua-icon">📷</span>Снимок</button><button class="upload-action-btn" onclick="document.getElementById('fileFiles').click()"><span class="ua-icon">📎</span>Файлы</button></div><div id="uploadStatus"></div></div><div class="card"><div class="card-title"><span class="icon">📋</span> Документы</div><div id="recentDocs"><p style="color:var(--text3);text-align:center;padding:20px;">Нет документов</p></div></div><div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> Вернуться</button></div></div>
+
+    <!-- UNIFIED CHAT -->
+    <div id="page-chat" class="screen"><div class="card" style="padding-bottom:12px;">
+        <div class="card-title"><span class="icon">💬</span> AI Ассистент</div>
+        <div class="chat-box" id="chatMessages"><p style="color:var(--text3);text-align:center;padding:40px;">Задайте вопрос текстом или голосом</p></div>
+        <div class="voice-timer" id="voiceTimer">🔴 0:00</div>
+        <div class="chat-input-row">
+            <textarea id="chatInput" rows="2" placeholder="Напишите сообщение..."></textarea>
+            <button class="chat-voice-btn" id="voiceBtn" onclick="toggleVoice()">🎤</button>
+            <button class="chat-send-btn" onclick="sendTextMessage()">➤</button>
+        </div>
+    </div><div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> Вернуться</button></div></div>
+
+    <div id="page-invoice" class="screen"><div class="card"><div class="card-title"><span class="icon">📝</span> Создать счёт</div><div class="toggle-row"><button class="toggle-opt active" onclick="setInvoiceType('proforma',this)">Проформа</button><button class="toggle-opt" onclick="setInvoiceType('faktura',this)">Фактура</button></div><div class="form-group" style="position:relative;"><label class="form-label">Контрагент</label><input type="text" class="form-input" id="invContractor" placeholder="Начните вводить..." autocomplete="off" oninput="searchContractor(this.value)"><div class="search-dropdown" id="contractorDropdown"></div></div><div class="form-group"><label class="form-label">NIP контрагента</label><div style="display:flex;gap:8px;"><input type="tel" class="form-input" id="invNip" placeholder="0000000000" maxlength="10" inputmode="numeric" style="flex:1;"><button class="btn btn-outline" style="width:auto;padding:14px 16px;margin:0;" onclick="lookupNip()">🔍</button></div></div><div class="form-group"><label class="form-label">Номер</label><input type="text" class="form-input readonly" id="invNumber" placeholder="Автоматически" readonly></div><div class="form-group"><label class="form-label">Сумма BRUTTO (PLN)</label><input type="text" class="form-input" id="invAmount" placeholder="0.00" inputmode="decimal" oninput="calcNetto()"></div><div class="checkbox-row"><input type="checkbox" id="invVatIncluded" checked onchange="calcNetto()"><label for="invVatIncluded">Включая НДС</label></div><div class="form-group"><label class="form-label">Ставка НДС</label><select class="form-input" id="invVatRate" onchange="calcNetto()"><option value="23">23%</option><option value="8">8%</option><option value="5">5%</option><option value="0">0% (ZW)</option></select></div><div class="netto-display" id="nettoDisplay">Netto: <strong>0.00 zł</strong> | VAT: <strong>0.00 zł</strong></div><div class="form-group" style="margin-top:14px;"><label class="form-label">Назначение</label><input type="text" class="form-input" id="invPurpose" placeholder="Za usługi..."></div><div class="form-row"><div class="form-group"><label class="form-label">Оплатить до</label><input type="date" class="form-input" id="invDueDate"></div><div class="form-group"><label class="form-label">Тип оплаты</label><select class="form-input" id="invPayType"><option value="przelew">Безнал</option><option value="gotowka">Наличные</option><option value="karta">Карта</option></select></div></div><div class="invoice-actions"><button class="btn btn-primary" onclick="invoiceAction('email')"><span class="btn-icon">📧</span> Выслать e-mail</button><button class="btn btn-green" onclick="invoiceAction('pdf')"><span class="btn-icon">📄</span> Сохранить</button><button class="btn btn-outline" onclick="invoiceAction('ksef')"><span class="btn-icon">🏛</span> KSeF</button></div></div><div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> Вернуться</button></div></div>
+    <div id="page-info" class="screen"><div class="card"><div class="card-title"><span class="icon">💰</span> Финансовая сводка</div><div class="info-row"><span class="ir-label">Приход</span><span class="ir-value" id="infoPrihod">0 zł</span></div><div class="info-row"><span class="ir-label">Расход</span><span class="ir-value" id="infoRashod">0 zł</span></div><div class="info-row"><span class="ir-label">Доход</span><span class="ir-value" id="infoDohod">0 zł</span></div><div class="info-row"><span class="ir-label">НДС</span><span class="ir-value" id="infoVat">0 zł</span></div><div class="info-row"><span class="ir-label">PIT</span><span class="ir-value" id="infoPit">0 zł</span></div><div class="info-row"><span class="ir-label">ZUS</span><span class="ir-value" id="infoZus">0 zł</span></div></div><div class="card"><div class="card-title"><span class="icon">📄</span> Декларации</div><div id="infoDeclarations"><p style="color:var(--text3);text-align:center;padding:16px;">Загрузка...</p></div></div><div class="card"><div class="card-title"><span class="icon">⚙️</span> Тариф</div><div class="info-row"><span class="ir-label">Тариф</span><span class="ir-value" id="infoTariff">—</span></div><div class="info-row"><span class="ir-label">Стоимость</span><span class="ir-value" id="infoPrice">—</span></div><div class="info-row"><span class="ir-label">Платёж</span><span class="ir-value" id="infoNextPay">—</span></div><div class="info-row"><span class="ir-label">Налоги</span><span class="ir-value" id="infoTaxType">—</span></div><div class="info-row"><span class="ir-label">E-mail</span><span class="ir-value" id="infoEmail">—</span></div></div><button class="btn btn-secondary" onclick="showScreen('page-company')" style="margin-bottom:8px;"><span class="btn-icon">🏢</span> Редактировать</button><div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> Вернуться</button></div></div>
+</div>
+<div class="modal-overlay" id="emailModal" style="display:none;"><div class="modal-box"><div class="modal-title">📧 Отправить на e-mail</div><div class="form-group"><label class="form-label">E-mail получателя</label><input type="email" class="form-input" id="modalEmail"></div><button class="btn btn-primary" onclick="confirmSendEmail()"><span class="btn-icon">📧</span> Отправить</button><button class="btn btn-secondary" onclick="closeEmailModal()" style="margin-top:8px;">Отмена</button></div></div>
+
+<script>
+const API='https://n8n.ai-finanse.pl/webhook/finansemg';
+const tg=window.Telegram?.WebApp;if(tg){tg.expand();tg.enableClosingConfirmation()}
+const telegramId=tg?.initDataUnsafe?.user?.id?.toString()||'demo_user';
+let userData=null,companyData=null,companyNip=null,currentInvoiceType='proforma',cachedDashboard=null,pendingInvoiceData=null;
+document.getElementById('debugBanner').textContent='🔧 ID: '+telegramId;
+
+async function api(ep,data={},timeout=15000){const c=new AbortController();const t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(API+'/'+ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),signal:c.signal});clearTimeout(t);const txt=await r.text();try{return JSON.parse(txt)}catch{return{raw:txt}}}catch(e){clearTimeout(t);throw e}}
+function parseList(d,key){if(Array.isArray(d))return d;if(d&&typeof d==='object'){if(Array.isArray(d[key]))return d[key];if(d.raw){try{const p=JSON.parse(d.raw);return Array.isArray(p)?p:(p[key]||[])}catch{}}};return[]}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(tg){id==='page-login'?tg.BackButton.hide():tg.BackButton.show()}if(id==='page-dashboard')loadDashboard(true);if(id==='page-upload')loadRecentDocs(true);if(id==='page-chat')loadChat(true);if(id==='page-info')loadFullInfo(true);if(id==='page-invoice')resetInvoiceForm();if(id==='page-company'){document.getElementById('compBackBtn').style.display=companyData?.company_name?'flex':'none';if(companyData)fillCompanyForm(companyData)}}
+if(tg){tg.BackButton.onClick(()=>{const a=document.querySelector('.screen.active');if(a.id==='page-dashboard'||a.id==='page-login')tg.close();else showScreen('page-dashboard')})}
+
+// ═══ LOGIN ═══
+const codeDigits=document.querySelectorAll('.code-digit');
+codeDigits.forEach((inp,idx)=>{inp.addEventListener('input',e=>{const v=e.target.value.replace(/\D/g,'');e.target.value=v;if(v&&idx<5)codeDigits[idx+1].focus();e.target.classList.toggle('filled',!!v);const code=Array.from(codeDigits).map(d=>d.value).join('');if(code.length===6)verifyCode(code)});inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!e.target.value&&idx>0){codeDigits[idx-1].focus();codeDigits[idx-1].value='';codeDigits[idx-1].classList.remove('filled')}})});
+async function verifyCode(code){try{const d=await api('verify-code',{telegram_id:telegramId,code});if(!d.success)throw 0;userData=d.user;companyData=d.company;companyNip=d.company?.nip||d.user?.company_nip;document.getElementById('debugBanner').textContent='🔧 ID:'+telegramId+' NIP:'+companyNip+' '+(userData?.name||'');toast('success','✅ Добро пожаловать, '+(userData?.name||''));await delay(600);showScreen(companyData?.company_name?'page-dashboard':'page-company')}catch{codeDigits.forEach(d=>{d.classList.add('error-shake');d.value='';d.classList.remove('filled');setTimeout(()=>d.classList.remove('error-shake'),500)});codeDigits[0].focus();toast('error','❌ Неверный код')}}
+async function verifyIdentity(){const nip=document.getElementById('forgotNip').value.trim(),pesel=document.getElementById('forgotPesel').value.trim();if(nip.length!==10){toast('error','NIP: 10 цифр');return}if(pesel.length!==11){toast('error','PESEL: 11 цифр');return}try{const d=await api('verify-identity',{telegram_id:telegramId,nip,pesel});if(!d.success)throw 0;showScreen('page-newcode');toast('success','✅ Верификация пройдена')}catch{toast('error','❌ Не найдено')}}
+async function saveNewCode(){const c1=document.getElementById('newCode').value.trim(),c2=document.getElementById('confirmCode').value.trim();if(c1.length!==6){toast('error','6 цифр');return}if(c1!==c2){toast('error','Не совпадают');return}try{await api('set-code',{telegram_id:telegramId,new_code:c1});toast('success','✅ Код изменён!');setTimeout(()=>showScreen('page-login'),1000)}catch{toast('error','❌ Ошибка')}}
+
+// ═══ COMPANY ═══
+document.getElementById('compIban')?.addEventListener('input',e=>{const v=e.target.value.replace(/\s/g,'').toUpperCase();document.getElementById('swiftGroup').style.display=(/^[A-Z]{2}/.test(v)&&!v.startsWith('PL'))?'block':'none'});
+function fillCompanyForm(d){document.getElementById('compName').value=d.company_name||'';document.getElementById('compEmail').value=d.email||'';document.getElementById('compStreet').value=d.street||'';document.getElementById('compBuilding').value=d.building||'';document.getElementById('compZip').value=d.zip||'';document.getElementById('compCity').value=d.city||'';document.getElementById('compCountry').value=d.country||'PL';document.getElementById('compNip').value=d.nip||companyNip||'';document.getElementById('compIban').value=d.iban||'';document.getElementById('compSwift').value=d.swift||'';document.getElementById('compPkd').value=d.pkd||''}
+async function saveCompanyData(){const p={nip:companyNip,company_name:document.getElementById('compName').value.trim(),email:document.getElementById('compEmail').value.trim(),street:document.getElementById('compStreet').value.trim(),building:document.getElementById('compBuilding').value.trim(),zip:document.getElementById('compZip').value.trim(),city:document.getElementById('compCity').value.trim(),country:document.getElementById('compCountry').value,iban:document.getElementById('compIban').value.trim(),swift:document.getElementById('compSwift').value.trim(),pkd:document.getElementById('compPkd').value.trim()};if(!p.company_name){toast('error','Введите название');return}try{await api('save-company',p);companyData={...companyData,...p};toast('success','✅ Сохранено!')}catch{toast('error','❌ Ошибка')}}
+
+// ═══ DASHBOARD ═══
+const MONTHS_PL=['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+function currentMonthPL(){return MONTHS_PL[new Date().getMonth()]}function currentYear(){return new Date().getFullYear().toString()}
+async function loadDashboard(silent=false){document.getElementById('dashMonth').textContent=currentMonthPL()+' '+currentYear();if(!companyNip)return;try{const d=await api('get-dashboard',{nip:companyNip,month:currentMonthPL(),year:currentYear()});cachedDashboard=d;document.getElementById('dPrihod').textContent=fmt(d.prihod);document.getElementById('dRashod').textContent=fmt(d.rashod);document.getElementById('dDohod').textContent=fmt(d.dohod);document.getElementById('dVat').textContent=fmt(d.vat);document.getElementById('dPit').textContent=fmt(d.pit);document.getElementById('dZus').textContent=fmt(d.zus)}catch{if(!silent)toast('error','Ошибка')}}
+function fmt(v){if(v==null||v==='')return'0 zł';const n=parseFloat(v);return isNaN(n)?'0 zł':n.toLocaleString('pl-PL')+' zł'}
+
+// ═══ UPLOAD ═══
+['fileGallery','fileCamera','fileFiles'].forEach(id=>{document.getElementById(id)?.addEventListener('change',async e=>{const files=e.target.files;if(!files.length)return;const MAX=5*1024*1024,st=document.getElementById('uploadStatus');for(let f of files){if(f.size>MAX){st.innerHTML='<div style="padding:12px;background:var(--red-bg);border-radius:8px;color:var(--red);font-size:14px;text-align:center;">❌ '+f.name+' > 5 МБ</div>';e.target.value='';return}}st.innerHTML='<div style="padding:12px;background:var(--brand-light);border-radius:8px;color:var(--brand);font-size:14px;text-align:center;">📤 Загружаем...</div>';let ok=0,fail=0;for(let f of files){try{const fd=new FormData();fd.append('file',f);fd.append('nip',companyNip);fd.append('uploaded_by',telegramId);fd.append('file_name',f.name);const res=await fetch(API+'/upload',{method:'POST',body:fd});const data=await res.json().catch(()=>({}));if(data.error)fail++;else ok++}catch{fail++}}st.innerHTML=ok>0&&fail===0?'<div style="padding:12px;background:var(--green-bg);border-radius:8px;color:var(--green);font-size:14px;text-align:center;">✅ Загружено: '+ok+'</div>':ok>0?'<div style="padding:12px;background:var(--orange-bg);border-radius:8px;color:var(--orange);font-size:14px;text-align:center;">⚠️ Ok:'+ok+' Err:'+fail+'</div>':'<div style="padding:12px;background:var(--red-bg);border-radius:8px;color:var(--red);font-size:14px;text-align:center;">❌ Ошибка</div>';setTimeout(()=>{st.innerHTML='';loadRecentDocs()},2500);e.target.value=''})});
+async function loadRecentDocs(silent=false){if(!companyNip)return;try{const d=await api('get-docs',{nip:companyNip});const list=parseList(d,'docs');document.getElementById('recentDocs').innerHTML=list.length?list.map(doc=>{const nm=doc.file_name||'Документ';const ic=nm.match(/\.pdf$/i)?'📄':(nm.match(/\.(jpg|jpeg|png)$/i)?'📷':'📎');const dt=doc.uploaded_at?new Date(doc.uploaded_at).toLocaleDateString('ru-RU'):'';return'<div class="doc-item"><span class="di-icon">'+ic+'</span><div><div class="di-name">'+nm+'</div><div class="di-date">'+dt+'</div></div></div>'}).join(''):'<p style="color:var(--text3);text-align:center;padding:20px;">Нет документов</p>'}catch{if(!silent)toast('error','Ошибка')}}
+
+// ══════════════════════════════════════════════════════
+// UNIFIED CHAT: один endpoint send-message для текста и голоса
+// Приложение шлёт: { type: "text"|"voice", nip, telegram_id, text, ... }
+// n8n возвращает: { user_text: "...", reply: "AI ответ" }
+// ══════════════════════════════════════════════════════
+
+async function loadChat(silent=false){
+    if(!companyNip)return;
+    try{
+        const d=await api('get-messages',{nip:companyNip});
+        const list=parseList(d,'messages');
+        const box=document.getElementById('chatMessages');
+        if(!list.length){box.innerHTML='<p style="color:var(--text3);text-align:center;padding:40px;">Задайте вопрос текстом или голосом</p>';return}
+        box.innerHTML=list.map(m=>{
+            const t=m.timestamp?new Date(m.timestamp).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}):'';
+            return'<div class="msg '+m.from+'"><div class="msg-sender">'+(m.from==='client'?'Вы':'AI Ассистент')+'</div><div>'+escHtml(m.text||'')+'</div><div class="msg-time">'+t+'</div></div>'
+        }).join('');
+        box.scrollTop=box.scrollHeight;
+    }catch{if(!silent)toast('error','Ошибка чата')}
+}
+
+// ═══ TEXT MESSAGE ═══
+async function sendTextMessage(){
+    const inp=document.getElementById('chatInput');
+    const txt=inp.value.trim();if(!txt)return;
+    inp.value='';
+    appendMsg('client',txt);
+    showTypingIndicator();
+    try{
+        // Один endpoint: type=text
+        const r=await api('send-message',{
+            nip:companyNip,
+            telegram_id:telegramId,
+            type:'text',
+            text:txt
+        },30000);
+        hideTypingIndicator();
+        if(r.reply){
+            appendMsg('manager',r.reply);
+        }
+    }catch{
+        hideTypingIndicator();
+        toast('error','Ошибка отправки');
+    }
+}
+
+// ═══ VOICE RECORDING ═══
+let mediaRecorder=null,audioChunks=[],voiceInterval=null,voiceSeconds=0,isRecording=false;
+async function toggleVoice(){
+    if(isRecording){stopVoice();return}
+    try{
+        const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        mediaRecorder=new MediaRecorder(stream,{mimeType:MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm'});
+        audioChunks=[];
+        mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data)};
+        mediaRecorder.onstop=async()=>{
+            stream.getTracks().forEach(t=>t.stop());
+            if(audioChunks.length===0)return;
+            const blob=new Blob(audioChunks,{type:'audio/webm'});
+            await sendVoiceMessage(blob);
+        };
+        mediaRecorder.start();
+        isRecording=true;voiceSeconds=0;
+        document.getElementById('voiceBtn').classList.add('recording');
+        const timer=document.getElementById('voiceTimer');timer.style.display='block';
+        voiceInterval=setInterval(()=>{voiceSeconds++;const m=Math.floor(voiceSeconds/60),s=voiceSeconds%60;timer.textContent='🔴 '+m+':'+String(s).padStart(2,'0')},1000);
+    }catch{toast('error','❌ Нет доступа к микрофону')}
+}
+function stopVoice(){if(mediaRecorder&&mediaRecorder.state==='recording')mediaRecorder.stop();isRecording=false;document.getElementById('voiceBtn').classList.remove('recording');document.getElementById('voiceTimer').style.display='none';clearInterval(voiceInterval)}
+async function sendVoiceMessage(blob){
+    const dur=voiceSeconds;
+    if(dur<1){toast('error','Слишком короткое');return}
+    appendMsg('client','🎤 Голосовое ('+dur+' сек)');
+    showTypingIndicator();
+    try{
+        // Один endpoint: type=voice, FormData с аудио
+        const fd=new FormData();
+        fd.append('audio',blob,'voice.webm');
+        fd.append('nip',companyNip);
+        fd.append('telegram_id',telegramId);
+        fd.append('type','voice');
+        fd.append('duration',dur.toString());
+        const res=await fetch(API+'/send-message',{method:'POST',body:fd});
+        const data=await res.json().catch(()=>({}));
+        hideTypingIndicator();
+        // Показываем распознанный текст и ответ AI
+        if(data.user_text){
+            // Обновим последнее сообщение клиента
+            const msgs=document.getElementById('chatMessages');
+            const clientMsgs=msgs.querySelectorAll('.msg.client');
+            const last=clientMsgs[clientMsgs.length-1];
+            if(last){const div=last.querySelector('div:nth-child(2)');if(div)div.textContent='🎤 '+data.user_text}
+        }
+        if(data.reply){
+            appendMsg('manager',data.reply);
+        }
+    }catch{hideTypingIndicator();toast('error','❌ Ошибка')}
+}
+
+// ═══ CHAT HELPERS ═══
+function appendMsg(from,text){const box=document.getElementById('chatMessages');const ph=box.querySelector('p');if(ph)ph.remove();const t=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});box.insertAdjacentHTML('beforeend','<div class="msg '+from+'"><div class="msg-sender">'+(from==='client'?'Вы':'AI Ассистент')+'</div><div>'+escHtml(text)+'</div><div class="msg-time">'+t+'</div></div>');box.scrollTop=box.scrollHeight}
+function showTypingIndicator(){const box=document.getElementById('chatMessages');box.insertAdjacentHTML('beforeend','<div class="msg manager" id="typingMsg"><div class="msg-sender">AI Ассистент</div><div class="msg-typing"><span></span><span></span><span></span></div></div>');box.scrollTop=box.scrollHeight}
+function hideTypingIndicator(){document.getElementById('typingMsg')?.remove()}
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ═══ INVOICE ═══
+function setInvoiceType(type,btn){currentInvoiceType=type;document.querySelectorAll('.toggle-opt').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+function resetInvoiceForm(){document.getElementById('invContractor').value='';document.getElementById('invNip').value='';document.getElementById('invNumber').value='';document.getElementById('invAmount').value='';document.getElementById('invVatIncluded').checked=true;document.getElementById('invVatRate').value='23';document.getElementById('invPurpose').value='';document.getElementById('invDueDate').value=new Date(Date.now()+14*864e5).toISOString().split('T')[0];document.getElementById('invPayType').value='przelew';document.getElementById('nettoDisplay').innerHTML='Netto: <strong>0.00 zł</strong> | VAT: <strong>0.00 zł</strong>'}
+let searchTimer;function searchContractor(query){clearTimeout(searchTimer);const dd=document.getElementById('contractorDropdown');if(query.length<2){dd.classList.remove('visible');return}searchTimer=setTimeout(async()=>{try{const d=await api('search-contractor',{query});const list=parseList(d,'results');if(!list.length){dd.classList.remove('visible');return}dd.innerHTML=list.map(c=>'<div class="search-dropdown-item" onclick="selectContractor(\''+((c.company_name||'').replace(/'/g,"\\'"))+'\',\''+(c.nip||'')+'\')">'+'<div class="sdi-name">'+(c.company_name||'')+'</div><div class="sdi-nip">NIP: '+(c.nip||'—')+'</div></div>').join('');dd.classList.add('visible')}catch{dd.classList.remove('visible')}},400)}
+function selectContractor(name,nip){document.getElementById('invContractor').value=name;document.getElementById('invNip').value=nip;document.getElementById('contractorDropdown').classList.remove('visible')}
+document.addEventListener('click',e=>{if(!e.target.closest('#invContractor')&&!e.target.closest('#contractorDropdown'))document.getElementById('contractorDropdown').classList.remove('visible')});
+async function lookupNip(){const nip=document.getElementById('invNip').value.trim();if(nip.length!==10){toast('error','NIP: 10 цифр');return}try{toast('info','🔍');const d=await api('lookup-nip',{nip});if(d.company_name){document.getElementById('invContractor').value=d.company_name;toast('success','✅ '+d.company_name)}else toast('error','❌ Не найден')}catch{toast('error','❌ Ошибка')}}
+function calcNetto(){const brutto=parseFloat(document.getElementById('invAmount').value)||0;const rate=parseInt(document.getElementById('invVatRate').value)||0;const incl=document.getElementById('invVatIncluded').checked;let netto,vat;if(incl&&rate>0){netto=brutto/(1+rate/100);vat=brutto-netto}else{netto=brutto;vat=brutto*rate/100}document.getElementById('nettoDisplay').innerHTML='Netto: <strong>'+netto.toFixed(2)+' zł</strong> | VAT '+rate+'%: <strong>'+vat.toFixed(2)+' zł</strong>'}
+async function invoiceAction(action){const d={nip:companyNip,type:currentInvoiceType,contractor:document.getElementById('invContractor').value.trim(),contractor_nip:document.getElementById('invNip').value.trim(),amount:document.getElementById('invAmount').value.trim(),vat_rate:document.getElementById('invVatRate').value,purpose:document.getElementById('invPurpose').value.trim(),due_date:document.getElementById('invDueDate').value,pay_type:document.getElementById('invPayType').value,action};if(!d.contractor){toast('error','Контрагент');return}if(!d.amount){toast('error','Сумма');return}if(action==='email'){pendingInvoiceData=d;document.getElementById('modalEmail').value=companyData?.email||'';document.getElementById('emailModal').style.display='flex';return}await submitInvoice(d,action)}
+async function confirmSendEmail(){const email=document.getElementById('modalEmail').value.trim();if(!email||!email.includes('@')){toast('error','E-mail');return}closeEmailModal();pendingInvoiceData.send_to_email=email;await submitInvoice(pendingInvoiceData,'email')}
+function closeEmailModal(){document.getElementById('emailModal').style.display='none'}
+async function submitInvoice(d,action){const btns=document.querySelectorAll('.invoice-actions .btn');btns.forEach(b=>b.disabled=true);toast('info','⏳ Формируем...');try{const r=await api('create-invoice',d);if(r.success||r.doc_name){const num=r.doc_name||'';if(num)document.getElementById('invNumber').value=num;if(action==='email')toast('success','✅ '+num+' → '+(d.send_to_email||''));else if(action==='pdf')toast('success','✅ '+num+' сохранён');else toast('info','🏛 KSeF — скоро');setTimeout(()=>resetInvoiceForm(),1500)}else throw 0}catch{toast('error','❌ Ошибка')}btns.forEach(b=>b.disabled=false)}
+document.getElementById('invDueDate').value=new Date(Date.now()+14*864e5).toISOString().split('T')[0];
+
+// ═══ INFO ═══
+async function loadFullInfo(silent=false){if(cachedDashboard){document.getElementById('infoPrihod').textContent=fmt(cachedDashboard.prihod);document.getElementById('infoRashod').textContent=fmt(cachedDashboard.rashod);document.getElementById('infoDohod').textContent=fmt(cachedDashboard.dohod);document.getElementById('infoVat').textContent=fmt(cachedDashboard.vat);document.getElementById('infoPit').textContent=fmt(cachedDashboard.pit);document.getElementById('infoZus').textContent=fmt(cachedDashboard.zus)}if(companyData){document.getElementById('infoTariff').textContent=companyData.tariff||'—';document.getElementById('infoPrice').textContent=companyData.price?companyData.price+' zł/мес':'—';document.getElementById('infoNextPay').textContent=companyData.next_payment||'—';document.getElementById('infoTaxType').textContent=companyData.tax_type||'—';document.getElementById('infoEmail').textContent=companyData.email||'—'}if(!companyNip)return;try{const d=await api('get-declarations',{nip:companyNip});const list=parseList(d,'declarations');document.getElementById('infoDeclarations').innerHTML=list.length?list.map(dl=>'<div class="decl-item"><div><div class="decl-id">'+(dl.decl_id||'')+'</div><div class="decl-month">'+(dl.month||'')+'</div></div><span class="decl-badge '+(dl.status||'')+'">'+(dl.status==='sent'?'Отправлено':'Ожидание')+'</span></div>').join(''):'<p style="color:var(--text3);text-align:center;padding:16px;">Нет деклараций</p>'}catch{if(!silent)document.getElementById('infoDeclarations').innerHTML='<p style="color:var(--text3);text-align:center;padding:16px;">Нет данных</p>'}}
+
+function toast(type,msg){document.querySelectorAll('.alert-toast').forEach(t=>t.remove());const el=document.createElement('div');el.className='alert-toast '+type;el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),3000)}
+function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+setTimeout(()=>codeDigits[0]?.focus(),300);
+</script>
+</body>
+</html>
