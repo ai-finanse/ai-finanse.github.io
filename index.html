@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI FINANSE</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --brand:#0066FF;--brand-dark:#0052CC;--brand-light:#E6F0FF;
+            --green:#00C48C;--green-bg:#E6FAF3;--green-light:#D1FAE5;
+            --red:#FF4757;--red-bg:#FFE8EB;
+            --orange:#FF9F43;--orange-bg:#FFF4E6;
+            --purple:#9B59B6;--purple-bg:#F3E8FF;
+            --yellow:#F59E0B;--yellow-bg:#FEF3C7;
+            --bg:#F0F2F5;--card:#FFF;--text:#1A1D21;--text2:#6B7280;--text3:#9CA3AF;
+            --border:#E5E7EB;--input-bg:#F9FAFB;
+            --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+            --radius:14px;--radius-sm:10px;--header-bg:#2D3239
+        }
+        body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+        input,textarea,select{caret-color:#1A1D21!important;color:#1A1D21!important}
+        
+        /* ═══ STATUS BAR ═══ */
+        .status-bar{padding:8px 16px;font-size:12px;font-weight:500;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .3s}
+        .status-bar.online{background:var(--green-light);color:#065F46}
+        .status-bar.offline{background:var(--yellow-bg);color:#92400E}
+        .status-bar .status-dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite}
+        .status-bar.online .status-dot{background:#10B981}
+        .status-bar.offline .status-dot{background:var(--yellow)}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+        
+        /* ═══ HEADER ═══ */
+        .header{background:var(--header-bg);padding:14px 20px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between}
+        .header-logo{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:#fff;letter-spacing:1.5px}
+        .header-logo span{color:rgba(255,255,255,.35);font-weight:400}
+        .header-actions{display:flex;align-items:center;gap:12px}
+        .lang-btn{background:rgba(255,255,255,.15);border:none;padding:6px 10px;border-radius:6px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s}
+        .lang-btn:active{background:rgba(255,255,255,.25)}
+        .notif-btn{position:relative;background:none;border:none;font-size:22px;cursor:pointer;padding:4px}
+        .notif-badge{position:absolute;top:-2px;right:-2px;background:var(--red);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+        .notif-badge.hidden{display:none}
+        
+        .container{padding:16px;max-width:480px;margin:0 auto}
+        .screen{display:none}.screen.active{display:block;animation:slideIn .25s ease-out}
+        @keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        
+        .card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:12px;box-shadow:var(--shadow)}
+        .card-title{font-size:15px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+        .card-title .icon{font-size:18px}
+        
+        /* ═══ FORMS ═══ */
+        .form-group{margin-bottom:14px}
+        .form-label{display:block;font-size:13px;font-weight:500;color:var(--text2);margin-bottom:6px}
+        .form-input{width:100%;padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:16px;font-family:inherit;background:var(--input-bg);color:var(--text)!important;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none}
+        .form-input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,102,255,.12);background:#fff}
+        .form-input::placeholder{color:var(--text3)}
+        .form-input.readonly{background:#eee;color:var(--text3)!important}
+        .form-input.disabled{background:#f5f5f5;color:var(--text3)!important;cursor:not-allowed;opacity:.6}
+        select.form-input{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .checkbox-row{display:flex;align-items:center;gap:10px;padding:12px 0}
+        .checkbox-row input[type="checkbox"]{width:20px;height:20px;accent-color:var(--brand);cursor:pointer}
+        .checkbox-row label{font-size:14px;font-weight:500;color:var(--text);cursor:pointer}
+        
+        /* ═══ FILTERS ═══ */
+        .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+        .filter-chip{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .15s}
+        .filter-chip:active{transform:scale(.97)}
+        .filter-chip.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+        .filter-select{padding:8px 30px 8px 12px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:var(--card);cursor:pointer;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+        
+        /* ═══ PIN CODE ═══ */
+        .code-wrapper{display:flex;flex-direction:column;align-items:center;padding:40px 20px}
+        .code-icon{font-size:56px;margin-bottom:20px}
+        .code-title{font-size:22px;font-weight:700;margin-bottom:8px}
+        .code-subtitle{font-size:14px;color:var(--text2);margin-bottom:32px}
+        .code-inputs{display:flex;gap:8px;margin-bottom:24px}
+        .code-digit{width:48px;height:56px;border:2px solid var(--border);border-radius:var(--radius-sm);text-align:center;font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;background:var(--input-bg);color:var(--text)!important;transition:all .2s;-webkit-appearance:none}
+        .code-digit:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,102,255,.15);background:#fff}
+        .code-digit.filled{border-color:var(--brand);background:var(--brand-light)}
+        .code-digit.error-shake{border-color:var(--red);animation:shake .4s ease}
+        @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+        .forgot-link{font-size:14px;color:var(--brand);cursor:pointer;font-weight:500;border:none;background:none;padding:8px}
+        
+        /* ═══ BUTTONS ═══ */
+        .btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+        .btn:active{transform:scale(.98)}
+        .btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+        .btn-primary{background:var(--brand);color:#fff}
+        .btn-secondary{background:var(--input-bg);color:var(--text);border:1.5px solid var(--border)}
+        .btn-green{background:var(--green);color:#fff}
+        .btn-red{background:var(--red);color:#fff}
+        .btn-outline{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+        .btn .btn-icon{font-size:18px}
+        .btn+.btn{margin-top:10px}
+        
+        /* ═══ STATS GRID (Clickable) ═══ */
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+        .stat-box{background:var(--input-bg);border-radius:var(--radius-sm);padding:16px 14px;text-align:center;border:1px solid var(--border);cursor:pointer;transition:all .15s}
+        .stat-box:active{transform:scale(.97);background:var(--brand-light)}
+        .stat-box.disabled{opacity:.5;cursor:not-allowed;background:var(--input-bg)}
+        .stat-box.disabled:active{transform:none}
+        .stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+        .stat-value{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700}
+        .stat-value.blue{color:var(--brand)}
+        .stat-value.green{color:var(--green)}
+        .stat-value.red{color:var(--red)}
+        .stat-value.orange{color:var(--orange)}
+        
+        /* ═══ MENU ═══ */
+        .menu-grid{display:flex;flex-direction:column;gap:8px}
+        .menu-btn{display:flex;align-items:center;gap:14px;padding:16px;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .15s}
+        .menu-btn:active{transform:scale(.98);background:var(--input-bg)}
+        .menu-btn.disabled{opacity:.5;cursor:not-allowed}
+        .menu-btn.disabled:active{transform:none;background:var(--card)}
+        .menu-btn .m-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+        .menu-btn .m-icon.blue{background:var(--brand-light)}
+        .menu-btn .m-icon.green{background:var(--green-bg)}
+        .menu-btn .m-icon.orange{background:var(--orange-bg)}
+        .menu-btn .m-icon.purple{background:var(--purple-bg)}
+        .menu-btn .m-icon.red{background:var(--red-bg)}
+        .menu-btn .m-text{flex:1}
+        .menu-btn .m-title{font-size:15px;font-weight:600}
+        .menu-btn .m-desc{font-size:12px;color:var(--text2);margin-top:2px}
+        .menu-btn .m-arrow{color:var(--text3);font-size:18px}
+        
+        /* ═══ UPLOAD ═══ */
+        .upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
+        .upload-zone:active{border-color:var(--brand);background:var(--brand-light)}
+        .upload-zone .uz-icon{font-size:40px;margin-bottom:10px}
+        .upload-zone .uz-text{font-size:15px;font-weight:500;color:var(--text2)}
+        .upload-zone .uz-hint{font-size:12px;color:var(--text3);margin-top:6px}
+        .upload-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px}
+        .upload-action-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;background:var(--input-bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;color:var(--text2)}
+        .upload-action-btn:active{background:var(--brand-light);border-color:var(--brand)}
+        .upload-action-btn .ua-icon{font-size:24px}
+        
+        /* ═══ DOCUMENTS LIST ═══ */
+        .doc-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--input-bg);border-radius:var(--radius-sm);margin-bottom:6px;cursor:pointer;transition:all .15s}
+        .doc-item:active{background:var(--brand-light)}
+        .doc-item .di-icon{font-size:22px}
+        .doc-item .di-name{font-size:14px;font-weight:500;flex:1}
+        .doc-item .di-date{font-size:11px;color:var(--text3)}
+        .doc-item .di-view{font-size:18px;color:var(--brand)}
+        
+        /* ═══ CHAT ═══ */
+        .chat-box{height:400px;overflow-y:auto;padding:14px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:12px}
+        .msg{max-width:82%;padding:10px 14px;border-radius:14px;margin-bottom:8px;font-size:14px;line-height:1.45;word-wrap:break-word;color:var(--text)}
+        .msg.client{background:#E8EAED;margin-left:auto;border-bottom-right-radius:4px}
+        .msg.manager{background:#fff;border:1px solid var(--border);border-bottom-left-radius:4px}
+        .msg-sender{font-size:11px;font-weight:600;margin-bottom:3px;color:var(--text2)}
+        .msg-time{font-size:10px;margin-top:4px;color:var(--text3)}
+        .msg-typing{display:flex;gap:4px;padding:8px 0}
+        .msg-typing span{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:typing 1.2s infinite}
+        .msg-typing span:nth-child(2){animation-delay:.2s}
+        .msg-typing span:nth-child(3){animation-delay:.4s}
+        @keyframes typing{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+        .chat-input-row{display:flex;gap:8px;align-items:flex-end}
+        .chat-input-row textarea{flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:inherit;resize:none;background:var(--input-bg);color:var(--text)!important}
+        .chat-input-row textarea:focus{outline:none;border-color:var(--brand)}
+        .chat-send-btn{width:48px;height:48px;border-radius:var(--radius-sm);border:none;background:var(--brand);color:#fff;font-size:20px;cursor:pointer;flex-shrink:0}
+        .chat-voice-btn{width:48px;height:48px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--input-bg);color:var(--text2);font-size:20px;cursor:pointer;flex-shrink:0;transition:all .2s}
+        .chat-voice-btn.recording{background:var(--red);color:#fff;border-color:var(--red);animation:pulse 1s infinite}
+        .voice-timer{font-size:13px;color:var(--red);font-weight:600;font-family:'JetBrains Mono',monospace;margin-bottom:8px;text-align:center;display:none}
+        
+        /* ═══ INVOICE ═══ */
+        .toggle-row{display:flex;background:var(--input-bg);border-radius:var(--radius-sm);padding:4px;margin-bottom:16px;border:1px solid var(--border)}
+        .toggle-opt{flex:1;padding:10px;text-align:center;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;border:none;background:transparent;font-family:inherit;color:var(--text2)}
+        .toggle-opt.active{background:var(--brand);color:#fff;box-shadow:var(--shadow)}
+        .netto-display{background:var(--input-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text2);margin-top:6px}
+        .netto-display strong{color:var(--text);font-family:'JetBrains Mono',monospace}
+        .invoice-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+        .search-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:50;max-height:200px;overflow-y:auto;display:none}
+        .search-dropdown.visible{display:block}
+        .search-dropdown-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);font-size:14px}
+        .search-dropdown-item:last-child{border-bottom:none}
+        .search-dropdown-item:active{background:var(--brand-light)}
+        .search-dropdown-item .sdi-name{font-weight:600}
+        .search-dropdown-item .sdi-nip{font-size:12px;color:var(--text3)}
+        
+        /* ═══ DECLARATIONS ═══ */
+        .decl-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--input-bg);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:all .15s}
+        .decl-item:active{background:var(--brand-light)}
+        .decl-item .decl-id{font-size:14px;font-weight:600}
+        .decl-item .decl-month{font-size:12px;color:var(--text2)}
+        .decl-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+        .decl-badge.sent{background:var(--green-bg);color:var(--green)}
+        .decl-badge.pending{background:var(--orange-bg);color:var(--orange)}
+        
+        /* ═══ INFO ROWS ═══ */
+        .info-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border)}
+        .info-row:last-child{border-bottom:none}
+        .info-row .ir-label{font-size:14px;color:var(--text2)}
+        .info-row .ir-value{font-size:14px;font-weight:600}
+        .divider{height:1px;background:var(--border);margin:16px 0}
+        
+        /* ═══ TARIFF CARDS ═══ */
+        .tariff-card{background:var(--card);border:2px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;cursor:pointer;transition:all .15s}
+        .tariff-card:active{transform:scale(.98)}
+        .tariff-card.current{border-color:var(--brand);background:var(--brand-light)}
+        .tariff-card .tc-name{font-size:18px;font-weight:700;margin-bottom:4px}
+        .tariff-card .tc-price{font-size:24px;font-weight:700;color:var(--brand);font-family:'JetBrains Mono',monospace}
+        .tariff-card .tc-price span{font-size:14px;color:var(--text2);font-weight:400}
+        .tariff-card .tc-features{margin-top:12px;font-size:13px;color:var(--text2);line-height:1.6}
+        
+        /* ═══ EMPLOYEES ═══ */
+        .emp-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--input-bg);border-radius:var(--radius-sm);margin-bottom:8px}
+        .emp-item .emp-avatar{width:40px;height:40px;border-radius:50%;background:var(--brand-light);display:flex;align-items:center;justify-content:center;font-size:18px}
+        .emp-item .emp-name{font-size:14px;font-weight:600;flex:1}
+        .emp-item .emp-status{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600}
+        .emp-item .emp-status.active{background:var(--green-bg);color:var(--green)}
+        .emp-item .emp-status.inactive{background:var(--red-bg);color:var(--red)}
+        
+        /* ═══ ASSETS ═══ */
+        .asset-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--input-bg);border-radius:var(--radius-sm);margin-bottom:8px}
+        .asset-item .asset-icon{font-size:24px}
+        .asset-item .asset-info{flex:1}
+        .asset-item .asset-name{font-size:14px;font-weight:600}
+        .asset-item .asset-value{font-size:12px;color:var(--text2)}
+        
+        /* ═══ PROMO POPUP ═══ */
+        .promo-popup{position:fixed;bottom:80px;left:16px;right:16px;background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);color:#fff;border-radius:var(--radius);padding:16px;box-shadow:0 8px 32px rgba(0,102,255,.3);z-index:150;display:none;animation:slideUp .3s ease}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .promo-popup .pp-close{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.2);border:none;width:24px;height:24px;border-radius:12px;color:#fff;font-size:14px;cursor:pointer}
+        .promo-popup .pp-title{font-size:16px;font-weight:700;margin-bottom:4px}
+        .promo-popup .pp-text{font-size:13px;opacity:.9;margin-bottom:12px}
+        .promo-popup .pp-btn{background:#fff;color:var(--brand);border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+        
+        /* ═══ MODAL ═══ */
+        .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+        .modal-box{background:var(--card);border-radius:var(--radius);padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);max-height:80vh;overflow-y:auto}
+        .modal-title{font-size:18px;font-weight:700;margin-bottom:16px}
+        
+        /* ═══ TOAST ═══ */
+        .alert-toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;z-index:999;max-width:90%;text-align:center;animation:toastIn .3s ease,toastOut .3s ease 2.7s forwards}
+        .alert-toast.success{background:var(--green);color:#fff}
+        .alert-toast.error{background:var(--red);color:#fff}
+        .alert-toast.info{background:var(--brand);color:#fff}
+        @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        @keyframes toastOut{from{opacity:1}to{opacity:0}}
+        
+        .back-row{margin-top:8px}
+        .section-title{font-size:14px;font-weight:600;color:var(--text2);margin:16px 0 12px;text-transform:uppercase;letter-spacing:.5px}
+    </style>
+</head>
+<body>
+
+<!-- STATUS BAR -->
+<div class="status-bar online" id="statusBar">
+    <span class="status-dot"></span>
+    <span id="statusText" data-i18n="status_online">В сети</span>
+    <span id="statusUser"></span>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-logo">AI <span>|</span> FINANSE</div>
+    <div class="header-actions">
+        <button class="lang-btn" id="langBtn" onclick="toggleLanguage()">RU</button>
+        <button class="notif-btn" onclick="showNotifications()">🔔<span class="notif-badge" id="notifBadge">2</span></button>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ═══════════════ LOGIN ═══════════════ -->
+    <div id="page-login" class="screen active">
+        <div class="card">
+            <div class="code-wrapper">
+                <div class="code-icon">🔐</div>
+                <div class="code-title" data-i18n="enter_code">Введите код</div>
+                <div class="code-subtitle" data-i18n="code_6digit">6-значный код доступа</div>
+                <div class="code-inputs" id="codeInputs">
+                    <input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off">
+                    <input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off">
+                    <input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off">
+                    <input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off">
+                    <input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off">
+                    <input type="tel" maxlength="1" class="code-digit" inputmode="numeric" autocomplete="off">
+                </div>
+                <button class="forgot-link" onclick="showScreen('page-forgot')" data-i18n="forgot_code">Забыли код?</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ FORGOT ═══════════════ -->
+    <div id="page-forgot" class="screen">
+        <div class="card">
+            <div class="card-title"><span class="icon">🔑</span> <span data-i18n="recovery">Восстановление</span></div>
+            <div class="form-group">
+                <label class="form-label">NIP</label>
+                <input type="tel" class="form-input" id="forgotNip" placeholder="0000000000" maxlength="10" inputmode="numeric">
+            </div>
+            <div class="form-group">
+                <label class="form-label">PESEL</label>
+                <input type="tel" class="form-input" id="forgotPesel" placeholder="00000000000" maxlength="11" inputmode="numeric">
+            </div>
+            <button class="btn btn-primary" onclick="verifyIdentity()"><span class="btn-icon">✓</span> <span data-i18n="confirm">Подтвердить</span></button>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-login')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <!-- ═══════════════ NEW CODE ═══════════════ -->
+    <div id="page-newcode" class="screen">
+        <div class="card">
+            <div class="card-title"><span class="icon">🔒</span> <span data-i18n="new_code">Новый код</span></div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="new_code_6">Новый код (6 цифр)</label>
+                <input type="tel" class="form-input" id="newCode" maxlength="6" inputmode="numeric" style="font-family:'JetBrains Mono';letter-spacing:8px;text-align:center;font-size:24px;">
+            </div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="confirm_code">Подтвердите</label>
+                <input type="tel" class="form-input" id="confirmCode" maxlength="6" inputmode="numeric" style="font-family:'JetBrains Mono';letter-spacing:8px;text-align:center;font-size:24px;">
+            </div>
+            <button class="btn btn-primary" onclick="saveNewCode()"><span class="btn-icon">💾</span> <span data-i18n="save">Сохранить</span></button>
+        </div>
+    </div>
+
+    <!-- ═══════════════ COMPANY DATA ═══════════════ -->
+    <div id="page-company" class="screen">
+        <div class="card">
+            <div class="card-title"><span class="icon">🏢</span> <span data-i18n="company_data">Данные компании</span></div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="company_name">Название</label>
+                <input type="text" class="form-input" id="compName" placeholder="Nazwa firmy">
+            </div>
+            <div class="form-group">
+                <label class="form-label">E-mail</label>
+                <input type="email" class="form-input" id="compEmail" placeholder="firma@example.com">
+            </div>
+            <div class="divider"></div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="street">Улица</label>
+                <input type="text" class="form-input" id="compStreet">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="building">Дом</label>
+                    <input type="text" class="form-input" id="compBuilding">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-i18n="zip">Индекс</label>
+                    <input type="text" class="form-input" id="compZip" maxlength="6">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" data-i18n="city">Город</label>
+                    <input type="text" class="form-input" id="compCity">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" data-i18n="country">Страна</label>
+                    <select class="form-input" id="compCountry">
+                        <option value="PL">Polska</option>
+                        <option value="DE">Niemcy</option>
+                        <option value="UA">Ukraina</option>
+                        <option value="OTHER">Inne</option>
+                    </select>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="form-group">
+                <label class="form-label">NIP</label>
+                <input type="tel" class="form-input readonly" id="compNip" readonly>
+            </div>
+            <div class="form-group">
+                <label class="form-label">IBAN</label>
+                <input type="text" class="form-input" id="compIban">
+            </div>
+            <div class="form-group" id="swiftGroup" style="display:none;">
+                <label class="form-label">SWIFT</label>
+                <input type="text" class="form-input" id="compSwift">
+            </div>
+            <div class="form-group">
+                <label class="form-label">PKD</label>
+                <input type="text" class="form-input" id="compPkd">
+            </div>
+            <div class="divider"></div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="tax_form">Форма налогообложения</label>
+                <select class="form-input" id="compTaxForm">
+                    <option value="skala">Skala podatkowa (12%/32%)</option>
+                    <option value="liniowy">Podatek liniowy (19%)</option>
+                    <option value="ryczalt">Ryczałt</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" data-i18n="zus_mode">Режим ZUS</label>
+                <select class="form-input" id="compZusMode">
+                    <option value="ulga_na_start">Ulga na start</option>
+                    <option value="preferencyjny">Preferencyjny</option>
+                    <option value="duzy">Duży ZUS</option>
+                    <option value="maly_plus">Mały ZUS plus</option>
+                </select>
+            </div>
+            <div class="checkbox-row">
+                <input type="checkbox" id="compVatPayer">
+                <label for="compVatPayer" data-i18n="vat_payer">Плательщик VAT</label>
+            </div>
+            <div class="checkbox-row">
+                <input type="checkbox" id="compChorobowe">
+                <label for="compChorobowe" data-i18n="chorobowe">Składka chorobowa</label>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveCompanyData()"><span class="btn-icon">💾</span> <span data-i18n="save">Сохранить</span></button>
+        <button class="btn btn-secondary" onclick="showScreen('page-dashboard')" id="compBackBtn" style="display:none;"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button>
+    </div>
+
+    <!-- ═══════════════ DASHBOARD ═══════════════ -->
+    <div id="page-dashboard" class="screen">
+        <div class="card">
+            <div class="card-title"><span class="icon">📊</span> <span data-i18n="finances">Финансы</span> — <span id="dashMonth"></span></div>
+            <div class="stats-grid">
+                <div class="stat-box" onclick="showScreen('page-income')">
+                    <div class="stat-label" data-i18n="income">Приход</div>
+                    <div class="stat-value green" id="dPrihod">0 zł</div>
+                </div>
+                <div class="stat-box" onclick="showScreen('page-expense')">
+                    <div class="stat-label" data-i18n="expense">Расход</div>
+                    <div class="stat-value red" id="dRashod">0 zł</div>
+                </div>
+                <div class="stat-box" onclick="showScreen('page-profit')">
+                    <div class="stat-label" data-i18n="profit">Доход</div>
+                    <div class="stat-value blue" id="dDohod">0 zł</div>
+                </div>
+                <div class="stat-box" id="vatBox" onclick="showScreen('page-vat')">
+                    <div class="stat-label">VAT</div>
+                    <div class="stat-value orange" id="dVat">0 zł</div>
+                </div>
+                <div class="stat-box" onclick="showScreen('page-pit')">
+                    <div class="stat-label">PIT</div>
+                    <div class="stat-value blue" id="dPit">0 zł</div>
+                </div>
+                <div class="stat-box" onclick="showScreen('page-zus')">
+                    <div class="stat-label">ZUS</div>
+                    <div class="stat-value blue" id="dZus">0 zł</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="menu-grid">
+            <div class="menu-btn" onclick="showScreen('page-invoice')">
+                <div class="m-icon green">📝</div>
+                <div class="m-text">
+                    <div class="m-title" data-i18n="create_invoice">Создать счёт</div>
+                    <div class="m-desc" data-i18n="invoice_desc">Фактура или проформа</div>
+                </div>
+                <div class="m-arrow">›</div>
+            </div>
+            <div class="menu-btn" onclick="showScreen('page-upload')">
+                <div class="m-icon blue">📤</div>
+                <div class="m-text">
+                    <div class="m-title" data-i18n="upload_docs">Загрузить документы</div>
+                    <div class="m-desc" data-i18n="upload_desc">Фото, сканы, PDF</div>
+                </div>
+                <div class="m-arrow">›</div>
+            </div>
+            <div class="menu-btn" onclick="showScreen('page-declarations')">
+                <div class="m-icon purple">📄</div>
+                <div class="m-text">
+                    <div class="m-title" data-i18n="declarations">Декларации</div>
+                    <div class="m-desc" data-i18n="decl_desc">VAT, PIT, ZUS, JPK</div>
+                </div>
+                <div class="m-arrow">›</div>
+            </div>
+            <div class="menu-btn" onclick="showScreen('page-employees')">
+                <div class="m-icon red">👥</div>
+                <div class="m-text">
+                    <div class="m-title" data-i18n="employees">Кадры</div>
+                    <div class="m-desc" data-i18n="emp_desc">Сотрудники, часы, отпуска</div>
+                </div>
+                <div class="m-arrow">›</div>
+            </div>
+            <div class="menu-btn" onclick="showScreen('page-chat')">
+                <div class="m-icon orange">💬</div>
+                <div class="m-text">
+                    <div class="m-title" data-i18n="ai_assistant">AI Ассистент</div>
+                    <div class="m-desc" data-i18n="chat_desc">Текст или голосовое</div>
+                </div>
+                <div class="m-arrow">›</div>
+            </div>
+            <div class="menu-btn" onclick="showScreen('page-info')">
+                <div class="m-icon blue">📋</div>
+                <div class="m-text">
+                    <div class="m-title" data-i18n="full_info">Полная информация</div>
+                    <div class="m-desc" data-i18n="info_desc">Тариф, данные, активы</div>
+                </div>
+                <div class="m-arrow">›</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pages: income, expense, pit, zus, vat, upload, declarations, employees, chat, invoice, info sections -->
+    <!-- (Adding simplified versions for brevity - full screens are similar to dashboard pattern) -->
+    
+    <div id="page-income" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">📈</span> <span data-i18n="income">Приход</span></div>
+        <div class="filter-bar">
+            <select class="filter-select"><option data-i18n="last_month">Последний месяц</option><option data-i18n="quarter">Квартал</option></select>
+            <select class="filter-select"><option data-i18n="all_contractors">Все контрагенты</option></select>
+            <select class="filter-select"><option data-i18n="all_pkd">Все PKD</option></select>
+        </div>
+        <div id="incomeList"><p style="color:var(--text3);text-align:center;padding:20px;" data-i18n="loading">Загрузка...</p></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-expense" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">📉</span> <span data-i18n="expense">Расход</span></div>
+        <div class="filter-bar">
+            <select class="filter-select"><option data-i18n="last_month">Последний месяц</option></select>
+            <select class="filter-select"><option data-i18n="all_contractors">Все контрагенты</option></select>
+            <select class="filter-select"><option data-i18n="all_categories">Все категории</option></select>
+        </div>
+        <div id="expenseList"><p style="color:var(--text3);text-align:center;padding:20px;" data-i18n="loading">Загрузка...</p></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-pit" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">💰</span> PIT</div>
+        <div class="filter-bar">
+            <select class="filter-select"><option data-i18n="last_month">Месяц</option><option data-i18n="quarter">Квартал</option></select>
+            <span class="filter-chip" onclick="this.classList.toggle('active')" data-i18n="paid">Оплачены</span>
+            <span class="filter-chip" onclick="this.classList.toggle('active')" data-i18n="unpaid">Не оплачены</span>
+        </div>
+        <div id="pitList"><p style="color:var(--text3);text-align:center;padding:20px;" data-i18n="loading">Загрузка...</p></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-zus" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">🏛</span> ZUS</div>
+        <div class="filter-bar">
+            <select class="filter-select"><option data-i18n="last_month">Месяц</option></select>
+            <span class="filter-chip" onclick="this.classList.toggle('active')" data-i18n="paid">Оплачены</span>
+            <span class="filter-chip" onclick="this.classList.toggle('active')" data-i18n="unpaid">Не оплачены</span>
+        </div>
+        <div id="zusList"><p style="color:var(--text3);text-align:center;padding:20px;" data-i18n="loading">Загрузка...</p></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-vat" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">💹</span> VAT</div>
+        <div id="vatList"><p style="color:var(--text3);text-align:center;padding:20px;" data-i18n="loading">Загрузка...</p></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-upload" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">📤</span> <span data-i18n="upload_docs">Загрузить документы</span></div>
+        <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none" multiple>
+        <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
+            <div class="uz-icon">📁</div>
+            <div class="uz-text" data-i18n="click_upload">Нажмите для загрузки</div>
+            <div class="uz-hint" data-i18n="upload_hint">Фото, сканы, PDF — до 5 МБ</div>
+        </div>
+        <div id="uploadStatus"></div>
+        </div>
+        <div class="card"><div class="card-title"><span class="icon">📋</span> <span data-i18n="documents">Документы</span></div>
+        <div id="recentDocs"><p style="color:var(--text3);text-align:center;padding:20px;" data-i18n="no_docs">Нет документов</p></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-declarations" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">📄</span> <span data-i18n="declarations">Декларации</span></div>
+        <div class="filter-bar">
+            <span class="filter-chip active" data-i18n="all">Все</span>
+            <span class="filter-chip">VAT</span>
+            <span class="filter-chip">PIT</span>
+            <span class="filter-chip">ZUS</span>
+            <span class="filter-chip">JPK</span>
+        </div>
+        <div id="declList"><p style="color:var(--text3);text-align:center;padding:20px;" data-i18n="loading">Загрузка...</p></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-employees" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">👥</span> <span data-i18n="employees">Кадры</span></div>
+        <div class="filter-bar">
+            <span class="filter-chip active" data-i18n="all">Все</span>
+            <span class="filter-chip" data-i18n="working">Работающие</span>
+            <span class="filter-chip" data-i18n="fired">Уволенные</span>
+        </div>
+        <div id="empList"><p style="color:var(--text3);text-align:center;padding:20px;" data-i18n="no_employees">Нет сотрудников</p></div>
+        </div>
+        <div class="section-title" data-i18n="actions">Действия</div>
+        <div class="menu-grid">
+            <div class="menu-btn"><div class="m-icon green">➕</div><div class="m-text"><div class="m-title" data-i18n="hire">Принять</div></div><div class="m-arrow">›</div></div>
+            <div class="menu-btn"><div class="m-icon red">➖</div><div class="m-text"><div class="m-title" data-i18n="fire">Уволить</div></div><div class="m-arrow">›</div></div>
+            <div class="menu-btn"><div class="m-icon blue">⏱</div><div class="m-text"><div class="m-title" data-i18n="log_hours">Часы</div></div><div class="m-arrow">›</div></div>
+            <div class="menu-btn"><div class="m-icon orange">🏖</div><div class="m-text"><div class="m-title" data-i18n="vacation">Отпуск</div></div><div class="m-arrow">›</div></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-chat" class="screen">
+        <div class="card" style="padding-bottom:12px;"><div class="card-title"><span class="icon">💬</span> <span data-i18n="ai_assistant">AI Ассистент</span></div>
+        <div class="chat-box" id="chatMessages"><p style="color:var(--text3);text-align:center;padding:40px;" data-i18n="chat_placeholder">Задайте вопрос</p></div>
+        <div class="voice-timer" id="voiceTimer">🔴 0:00</div>
+        <div class="chat-input-row">
+            <textarea id="chatInput" rows="2"></textarea>
+            <button class="chat-voice-btn" id="voiceBtn" onclick="toggleVoice()">🎤</button>
+            <button class="chat-send-btn" onclick="sendTextMessage()">➤</button>
+        </div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-invoice" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">📝</span> <span data-i18n="create_invoice">Создать счёт</span></div>
+        <div class="toggle-row">
+            <button class="toggle-opt active" onclick="setInvoiceType('proforma',this)" data-i18n="proforma">Проформа</button>
+            <button class="toggle-opt" onclick="setInvoiceType('faktura',this)" data-i18n="invoice">Фактура</button>
+        </div>
+        <div class="form-group" style="position:relative;">
+            <label class="form-label" data-i18n="contractor">Контрагент</label>
+            <input type="text" class="form-input" id="invContractor" autocomplete="off">
+            <div class="search-dropdown" id="contractorDropdown"></div>
+        </div>
+        <div class="form-group">
+            <label class="form-label" data-i18n="contractor_nip">NIP контрагента</label>
+            <div style="display:flex;gap:8px;"><input type="tel" class="form-input" id="invNip" maxlength="10" style="flex:1;"><button class="btn btn-outline" style="width:auto;padding:14px 16px;margin:0;" onclick="lookupNip()">🔍</button></div>
+        </div>
+        <div class="form-group"><label class="form-label" data-i18n="amount_brutto">Сумма BRUTTO</label><input type="text" class="form-input" id="invAmount" inputmode="decimal" oninput="calcNetto()"></div>
+        <div class="checkbox-row"><input type="checkbox" id="invVatIncluded" checked onchange="calcNetto()"><label for="invVatIncluded" data-i18n="vat_included">Включая НДС</label></div>
+        <div class="form-group"><label class="form-label" data-i18n="vat_rate">Ставка НДС</label>
+            <select class="form-input" id="invVatRate" onchange="calcNetto()"><option value="23">23%</option><option value="8">8%</option><option value="5">5%</option><option value="0">0%</option></select>
+        </div>
+        <div class="netto-display" id="nettoDisplay">Netto: <strong>0.00 zł</strong></div>
+        <div class="form-group" style="margin-top:14px;"><label class="form-label" data-i18n="purpose">Назначение</label><input type="text" class="form-input" id="invPurpose"></div>
+        <div class="form-row">
+            <div class="form-group"><label class="form-label" data-i18n="due_date">Оплатить до</label><input type="date" class="form-input" id="invDueDate"></div>
+            <div class="form-group"><label class="form-label" data-i18n="pay_type">Оплата</label>
+                <select class="form-input" id="invPayType"><option value="przelew" data-i18n="transfer">Безнал</option><option value="gotowka" data-i18n="cash">Наличные</option></select>
+            </div>
+        </div>
+        <div class="invoice-actions">
+            <button class="btn btn-primary" onclick="invoiceAction('email')"><span class="btn-icon">📧</span> <span data-i18n="send_email">E-mail</span></button>
+            <button class="btn btn-green" onclick="invoiceAction('pdf')"><span class="btn-icon">📄</span> <span data-i18n="save_pdf">Сохранить</span></button>
+            <button class="btn btn-outline" onclick="invoiceAction('ksef')"><span class="btn-icon">🏛</span> KSeF</button>
+        </div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-info" class="screen">
+        <div class="section-title" data-i18n="sections">Разделы</div>
+        <div class="menu-grid">
+            <div class="menu-btn" onclick="showScreen('page-info-finance')"><div class="m-icon green">💰</div><div class="m-text"><div class="m-title" data-i18n="finance_summary">Финансовая сводка</div></div><div class="m-arrow">›</div></div>
+            <div class="menu-btn" onclick="showScreen('page-declarations')"><div class="m-icon purple">📄</div><div class="m-text"><div class="m-title" data-i18n="declarations">Декларации</div></div><div class="m-arrow">›</div></div>
+            <div class="menu-btn" onclick="showScreen('page-info-initial')"><div class="m-icon blue">📝</div><div class="m-text"><div class="m-title" data-i18n="initial_data">Исходные данные</div></div><div class="m-arrow">›</div></div>
+            <div class="menu-btn" onclick="showScreen('page-tariffs')"><div class="m-icon orange">💳</div><div class="m-text"><div class="m-title" data-i18n="tariffs">Тарифы</div></div><div class="m-arrow">›</div></div>
+            <div class="menu-btn" onclick="showScreen('page-assets')"><div class="m-icon red">🏭</div><div class="m-text"><div class="m-title" data-i18n="assets">Основные средства</div></div><div class="m-arrow">›</div></div>
+            <div class="menu-btn" onclick="showScreen('page-company')"><div class="m-icon blue">🏢</div><div class="m-text"><div class="m-title" data-i18n="company_data">Данные компании</div></div><div class="m-arrow">›</div></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-dashboard')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-info-finance" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">💰</span> <span data-i18n="finance_summary">Финансовая сводка</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="income">Приход</span><span class="ir-value" id="infoPrihod">0 zł</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="expense">Расход</span><span class="ir-value" id="infoRashod">0 zł</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="profit">Доход</span><span class="ir-value" id="infoDohod">0 zł</span></div>
+        <div class="info-row"><span class="ir-label">VAT</span><span class="ir-value" id="infoVat">0 zł</span></div>
+        <div class="info-row"><span class="ir-label">PIT</span><span class="ir-value" id="infoPit">0 zł</span></div>
+        <div class="info-row"><span class="ir-label">ZUS</span><span class="ir-value" id="infoZus">0 zł</span></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-info')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-info-initial" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">📝</span> <span data-i18n="initial_data">Исходные данные</span></div>
+        <div class="info-row"><span class="ir-label">NIP</span><span class="ir-value" id="initNip">—</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="company_name">Название</span><span class="ir-value" id="initCompany">—</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="company_type">Тип</span><span class="ir-value" id="initType">—</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="tax_form">Налоги</span><span class="ir-value" id="initTaxForm">—</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="zus_mode">ZUS</span><span class="ir-value" id="initZusMode">—</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="chorobowe">Chorobowa</span><span class="ir-value" id="initChorobowe">—</span></div>
+        <div class="info-row"><span class="ir-label">PKD</span><span class="ir-value" id="initPkd">—</span></div>
+        <div class="info-row"><span class="ir-label">VAT</span><span class="ir-value" id="initVat">—</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="umowa">Umowa</span><span class="ir-value" id="initUmowa">—</span></div>
+        </div>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-info')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-tariffs" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">💳</span> <span data-i18n="tariffs">Тарифы</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="tariff">Текущий</span><span class="ir-value" id="curTariff">—</span></div>
+        <div class="info-row"><span class="ir-label" data-i18n="price">Цена</span><span class="ir-value" id="curPrice">—</span></div>
+        </div>
+        <div class="tariff-card" id="tariffSolo"><div class="tc-name">SOLO</div><div class="tc-price">0 zł <span>/mес</span></div><div class="tc-features">• JDG bez VAT • AI ассистент</div></div>
+        <div class="tariff-card" id="tariffStandard"><div class="tc-name">STANDARD</div><div class="tc-price">499 zł <span>/mес</span></div><div class="tc-features">• JDG + VAT • Кадры до 5</div></div>
+        <div class="tariff-card" id="tariffPremium"><div class="tc-name">PREMIUM</div><div class="tc-price">1499 zł <span>/mес</span></div><div class="tc-features">• Sp. z o.o. • Без лимитов</div></div>
+        <button class="btn btn-primary" style="margin-top:12px;"><span class="btn-icon">💳</span> <span data-i18n="upgrade">Изменить тариф</span></button>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-info')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+    <div id="page-assets" class="screen">
+        <div class="card"><div class="card-title"><span class="icon">🏭</span> <span data-i18n="assets">Основные средства</span></div>
+        <div id="assetsList"><p style="color:var(--text3);text-align:center;padding:20px;" data-i18n="no_assets">Нет основных средств</p></div>
+        </div>
+        <button class="btn btn-primary"><span class="btn-icon">➕</span> <span data-i18n="add_asset">Добавить</span></button>
+        <div class="back-row"><button class="btn btn-secondary" onclick="showScreen('page-info')"><span class="btn-icon">←</span> <span data-i18n="back">Назад</span></button></div>
+    </div>
+
+</div>
+
+<!-- PROMO POPUP -->
+<div class="promo-popup" id="promoPopup">
+    <button class="pp-close" onclick="closePromo()">✕</button>
+    <div class="pp-title" id="promoTitle">💡 KSeF</div>
+    <div class="pp-text" id="promoText">Выставляйте счета через KSeF!</div>
+    <button class="pp-btn" onclick="promoAction()" data-i18n="learn_more">Узнать больше</button>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="emailModal" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-title">📧 E-mail</div>
+        <div class="form-group"><label class="form-label">E-mail</label><input type="email" class="form-input" id="modalEmail"></div>
+        <button class="btn btn-primary" onclick="confirmSendEmail()"><span class="btn-icon">📧</span> <span data-i18n="send">Отправить</span></button>
+        <button class="btn btn-secondary" onclick="closeEmailModal()" style="margin-top:8px;" data-i18n="cancel">Отмена</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="docViewModal" style="display:none;">
+    <div class="modal-box" style="max-width:95%;">
+        <div class="modal-title" id="docViewTitle">📄 Документ</div>
+        <div id="docViewContent" style="text-align:center;"><img id="docViewImg" src="" style="max-width:100%;border-radius:8px;"></div>
+        <button class="btn btn-secondary" onclick="closeDocView()" data-i18n="close">Закрыть</button>
+    </div>
+</div>
+
+<script>
+const API='https://n8n.ai-finanse.pl/webhook/finansemg';
+const tg=window.Telegram?.WebApp;if(tg){tg.expand();tg.enableClosingConfirmation()}
+const telegramId=tg?.initDataUnsafe?.user?.id?.toString()||'demo_user';
+
+let userData=null,companyData=null,companyNip=null,currentInvoiceType='proforma',cachedDashboard=null,pendingInvoiceData=null,isOnline=true;
+
+// i18n
+const LANGS=['ru','pl','en'];
+let currentLang=(navigator.language||'ru').slice(0,2).toLowerCase();
+if(!LANGS.includes(currentLang))currentLang='ru';
+
+const i18n={
+    ru:{status_online:'В сети',status_offline:'Нет связи',enter_code:'Введите код',code_6digit:'6-значный код',forgot_code:'Забыли код?',recovery:'Восстановление',confirm:'Подтвердить',back:'Назад',save:'Сохранить',new_code:'Новый код',company_data:'Данные компании',company_name:'Название',street:'Улица',building:'Дом',zip:'Индекс',city:'Город',country:'Страна',tax_form:'Налогообложение',zus_mode:'Режим ZUS',vat_payer:'Плательщик VAT',chorobowe:'Chorobowa',finances:'Финансы',income:'Приход',expense:'Расход',profit:'Доход',create_invoice:'Создать счёт',invoice_desc:'Фактура или проформа',upload_docs:'Загрузить документы',upload_desc:'Фото, сканы, PDF',declarations:'Декларации',decl_desc:'VAT, PIT, ZUS, JPK',employees:'Кадры',emp_desc:'Сотрудники',ai_assistant:'AI Ассистент',chat_desc:'Текст или голосовое',full_info:'Полная информация',info_desc:'Тариф, данные',last_month:'Месяц',quarter:'Квартал',all_contractors:'Все контрагенты',all_pkd:'Все PKD',all_categories:'Все категории',paid:'Оплачены',unpaid:'Не оплачены',all:'Все',loading:'Загрузка...',no_docs:'Нет документов',no_employees:'Нет сотрудников',no_assets:'Нет средств',click_upload:'Нажмите для загрузки',upload_hint:'До 5 МБ',documents:'Документы',working:'Работающие',fired:'Уволенные',actions:'Действия',hire:'Принять',fire:'Уволить',log_hours:'Часы',vacation:'Отпуск',chat_placeholder:'Задайте вопрос',proforma:'Проформа',invoice:'Фактура',contractor:'Контрагент',contractor_nip:'NIP',amount_brutto:'Сумма BRUTTO',vat_included:'Включая НДС',vat_rate:'Ставка НДС',purpose:'Назначение',due_date:'Срок оплаты',pay_type:'Оплата',transfer:'Безнал',cash:'Наличные',send_email:'E-mail',save_pdf:'Сохранить',sections:'Разделы',finance_summary:'Финансовая сводка',initial_data:'Исходные данные',tariffs:'Тарифы',assets:'Основные средства',company_type:'Тип',umowa:'Umowa',tariff:'Тариф',price:'Цена',upgrade:'Изменить тариф',add_asset:'Добавить',send:'Отправить',cancel:'Отмена',close:'Закрыть',learn_more:'Узнать больше'},
+    pl:{status_online:'Online',status_offline:'Offline',enter_code:'Wprowadź kod',code_6digit:'6-cyfrowy kod',forgot_code:'Zapomniałeś?',recovery:'Odzyskiwanie',confirm:'Potwierdź',back:'Wstecz',save:'Zapisz',new_code:'Nowy kod',company_data:'Dane firmy',company_name:'Nazwa',street:'Ulica',building:'Budynek',zip:'Kod',city:'Miasto',country:'Kraj',tax_form:'Opodatkowanie',zus_mode:'Tryb ZUS',vat_payer:'Płatnik VAT',chorobowe:'Chorobowa',finances:'Finanse',income:'Przychód',expense:'Koszt',profit:'Dochód',create_invoice:'Wystaw fakturę',invoice_desc:'Faktura/proforma',upload_docs:'Prześlij dokumenty',upload_desc:'Zdjęcia, PDF',declarations:'Deklaracje',decl_desc:'VAT, PIT, ZUS',employees:'Kadry',emp_desc:'Pracownicy',ai_assistant:'Asystent AI',chat_desc:'Tekst/głos',full_info:'Informacje',info_desc:'Taryfa, dane',last_month:'Miesiąc',quarter:'Kwartał',all_contractors:'Wszyscy',all_pkd:'Wszystkie PKD',all_categories:'Wszystkie',paid:'Opłacone',unpaid:'Nieopłacone',all:'Wszystkie',loading:'Ładowanie...',no_docs:'Brak dokumentów',no_employees:'Brak pracowników',no_assets:'Brak środków',click_upload:'Kliknij',upload_hint:'Do 5 MB',documents:'Dokumenty',working:'Pracujący',fired:'Zwolnieni',actions:'Akcje',hire:'Zatrudnij',fire:'Zwolnij',log_hours:'Godziny',vacation:'Urlop',chat_placeholder:'Zadaj pytanie',proforma:'Proforma',invoice:'Faktura',contractor:'Kontrahent',contractor_nip:'NIP',amount_brutto:'Kwota BRUTTO',vat_included:'W tym VAT',vat_rate:'Stawka VAT',purpose:'Tytuł',due_date:'Termin',pay_type:'Płatność',transfer:'Przelew',cash:'Gotówka',send_email:'E-mail',save_pdf:'Zapisz',sections:'Sekcje',finance_summary:'Podsumowanie',initial_data:'Dane początkowe',tariffs:'Taryfy',assets:'Środki trwałe',company_type:'Typ',umowa:'Umowa',tariff:'Taryfa',price:'Cena',upgrade:'Zmień',add_asset:'Dodaj',send:'Wyślij',cancel:'Anuluj',close:'Zamknij',learn_more:'Więcej'},
+    en:{status_online:'Online',status_offline:'Offline',enter_code:'Enter code',code_6digit:'6-digit code',forgot_code:'Forgot?',recovery:'Recovery',confirm:'Confirm',back:'Back',save:'Save',new_code:'New code',company_data:'Company',company_name:'Name',street:'Street',building:'Building',zip:'Zip',city:'City',country:'Country',tax_form:'Tax form',zus_mode:'ZUS mode',vat_payer:'VAT payer',chorobowe:'Sick',finances:'Finances',income:'Income',expense:'Expense',profit:'Profit',create_invoice:'Create invoice',invoice_desc:'Invoice/proforma',upload_docs:'Upload docs',upload_desc:'Photos, PDF',declarations:'Declarations',decl_desc:'VAT, PIT, ZUS',employees:'Employees',emp_desc:'Staff',ai_assistant:'AI Assistant',chat_desc:'Text/voice',full_info:'Full info',info_desc:'Tariff, data',last_month:'Month',quarter:'Quarter',all_contractors:'All contractors',all_pkd:'All PKD',all_categories:'All categories',paid:'Paid',unpaid:'Unpaid',all:'All',loading:'Loading...',no_docs:'No documents',no_employees:'No employees',no_assets:'No assets',click_upload:'Click to upload',upload_hint:'Up to 5 MB',documents:'Documents',working:'Working',fired:'Fired',actions:'Actions',hire:'Hire',fire:'Fire',log_hours:'Hours',vacation:'Vacation',chat_placeholder:'Ask a question',proforma:'Proforma',invoice:'Invoice',contractor:'Contractor',contractor_nip:'NIP',amount_brutto:'Amount BRUTTO',vat_included:'Including VAT',vat_rate:'VAT rate',purpose:'Purpose',due_date:'Due date',pay_type:'Payment',transfer:'Transfer',cash:'Cash',send_email:'E-mail',save_pdf:'Save',sections:'Sections',finance_summary:'Financial summary',initial_data:'Initial data',tariffs:'Tariffs',assets:'Assets',company_type:'Type',umowa:'Contract',tariff:'Tariff',price:'Price',upgrade:'Change',add_asset:'Add',send:'Send',cancel:'Cancel',close:'Close',learn_more:'Learn more'}
+};
+
+function t(key){return i18n[currentLang]?.[key]||i18n.ru[key]||key}
+function applyTranslations(){document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=t(el.getAttribute('data-i18n'))})}
+function toggleLanguage(){const idx=LANGS.indexOf(currentLang);currentLang=LANGS[(idx+1)%LANGS.length];document.getElementById('langBtn').textContent=currentLang.toUpperCase();applyTranslations();updateStatusBar()}
+
+function updateStatusBar(){const bar=document.getElementById('statusBar'),text=document.getElementById('statusText'),user=document.getElementById('statusUser');bar.className='status-bar '+(isOnline?'online':'offline');text.textContent=t(isOnline?'status_online':'status_offline');if(userData)user.textContent=' • '+(userData.name||'')}
+window.addEventListener('online',()=>{isOnline=true;updateStatusBar()});window.addEventListener('offline',()=>{isOnline=false;updateStatusBar()})
+
+async function api(ep,data={},timeout=15000){const c=new AbortController();const tm=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(API+'/'+ep,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),signal:c.signal});clearTimeout(tm);const txt=await r.text();try{return JSON.parse(txt)}catch{return{raw:txt}}}catch(e){clearTimeout(tm);throw e}}
+function parseList(d,key){if(Array.isArray(d))return d;if(d&&typeof d==='object'){if(Array.isArray(d[key]))return d[key];if(d.raw){try{const p=JSON.parse(d.raw);return Array.isArray(p)?p:(p[key]||[])}catch{}}}return[]}
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id)?.classList.add('active');if(tg){id==='page-login'?tg.BackButton.hide():tg.BackButton.show()}if(id==='page-dashboard')loadDashboard();if(id==='page-upload')loadRecentDocs();if(id==='page-info-initial')loadInitialData();if(id==='page-tariffs')loadTariffs();if(id==='page-company'){document.getElementById('compBackBtn').style.display=companyData?.company_name?'flex':'none';if(companyData)fillCompanyForm(companyData)}}
+if(tg){tg.BackButton.onClick(()=>{const a=document.querySelector('.screen.active');if(a.id==='page-dashboard'||a.id==='page-login')tg.close();else showScreen('page-dashboard')})}
+
+const codeDigits=document.querySelectorAll('.code-digit');
+codeDigits.forEach((inp,idx)=>{inp.addEventListener('input',e=>{const v=e.target.value.replace(/\D/g,'');e.target.value=v;if(v&&idx<5)codeDigits[idx+1].focus();e.target.classList.toggle('filled',!!v);const code=Array.from(codeDigits).map(d=>d.value).join('');if(code.length===6)verifyCode(code)});inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!e.target.value&&idx>0){codeDigits[idx-1].focus();codeDigits[idx-1].value='';codeDigits[idx-1].classList.remove('filled')}})})
+
+async function verifyCode(code){try{const d=await api('verify-code',{telegram_id:telegramId,code});if(!d.success)throw 0;userData=d.user;companyData=d.company;companyNip=d.company?.nip||d.user?.company_nip;updateStatusBar();toast('success','✅');await delay(500);showScreen(companyData?.company_name?'page-dashboard':'page-company');setTimeout(showPromo,5000)}catch{codeDigits.forEach(d=>{d.classList.add('error-shake');d.value='';d.classList.remove('filled');setTimeout(()=>d.classList.remove('error-shake'),500)});codeDigits[0].focus();toast('error','❌')}}
+async function verifyIdentity(){const nip=document.getElementById('forgotNip').value.trim(),pesel=document.getElementById('forgotPesel').value.trim();if(nip.length!==10||pesel.length!==11){toast('error','❌');return}try{const d=await api('verify-identity',{telegram_id:telegramId,nip,pesel});if(!d.success)throw 0;showScreen('page-newcode');toast('success','✅')}catch{toast('error','❌')}}
+async function saveNewCode(){const c1=document.getElementById('newCode').value.trim(),c2=document.getElementById('confirmCode').value.trim();if(c1.length!==6||c1!==c2){toast('error','❌');return}try{await api('set-code',{telegram_id:telegramId,new_code:c1});toast('success','✅');setTimeout(()=>showScreen('page-login'),1000)}catch{toast('error','❌')}}
+
+function fillCompanyForm(d){document.getElementById('compName').value=d.company_name||'';document.getElementById('compEmail').value=d.email||'';document.getElementById('compStreet').value=d.street||'';document.getElementById('compBuilding').value=d.building||'';document.getElementById('compZip').value=d.zip||'';document.getElementById('compCity').value=d.city||'';document.getElementById('compCountry').value=d.country||'PL';document.getElementById('compNip').value=d.nip||companyNip||'';document.getElementById('compIban').value=d.iban||'';document.getElementById('compSwift').value=d.swift||'';document.getElementById('compPkd').value=d.pkd||'';document.getElementById('compTaxForm').value=d.tax_form||'skala';document.getElementById('compZusMode').value=d.zus_mode||'ulga_na_start';document.getElementById('compVatPayer').checked=!!d.vat_payer||d.vat_type!=='vat_0';document.getElementById('compChorobowe').checked=!!d.chorobowe}
+async function saveCompanyData(){const p={nip:companyNip,company_name:document.getElementById('compName').value.trim(),email:document.getElementById('compEmail').value.trim(),street:document.getElementById('compStreet').value.trim(),building:document.getElementById('compBuilding').value.trim(),zip:document.getElementById('compZip').value.trim(),city:document.getElementById('compCity').value.trim(),country:document.getElementById('compCountry').value,iban:document.getElementById('compIban').value.trim(),swift:document.getElementById('compSwift').value.trim(),pkd:document.getElementById('compPkd').value.trim(),tax_form:document.getElementById('compTaxForm').value,zus_mode:document.getElementById('compZusMode').value,vat_payer:document.getElementById('compVatPayer').checked,chorobowe:document.getElementById('compChorobowe').checked};if(!p.company_name){toast('error','❌');return}try{await api('save-company',p);companyData={...companyData,...p};toast('success','✅')}catch{toast('error','❌')}}
+
+const MONTHS={ru:['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'],pl:['styczeń','luty','marzec','kwiecień','maj','czerwiec','lipiec','sierpień','wrzesień','październik','listopad','grudzień'],en:['January','February','March','April','May','June','July','August','September','October','November','December']};
+function currentMonth(){return MONTHS[currentLang][new Date().getMonth()]}
+async function loadDashboard(){document.getElementById('dashMonth').textContent=currentMonth()+' '+new Date().getFullYear();const vatBox=document.getElementById('vatBox');const isVat=companyData?.vat_payer||companyData?.vat_type!=='vat_0';vatBox.classList.toggle('disabled',!isVat);if(!companyNip)return;try{const d=await api('get-dashboard',{nip:companyNip,month:MONTHS.pl[new Date().getMonth()],year:new Date().getFullYear().toString()});cachedDashboard=d;document.getElementById('dPrihod').textContent=fmt(d.prihod);document.getElementById('dRashod').textContent=fmt(d.rashod);document.getElementById('dDohod').textContent=fmt(d.dohod);document.getElementById('dVat').textContent=fmt(d.vat);document.getElementById('dPit').textContent=fmt(d.pit);document.getElementById('dZus').textContent=fmt(d.zus)}catch{}}
+function fmt(v){if(v==null||v==='')return'0 zł';const n=parseFloat(v);return isNaN(n)?'0 zł':n.toLocaleString('pl-PL')+' zł'}
+
+async function loadRecentDocs(){if(!companyNip)return;try{const d=await api('get-docs',{nip:companyNip});const list=parseList(d,'docs');document.getElementById('recentDocs').innerHTML=list.length?list.map(doc=>{const nm=doc.file_name||'Doc';const ic=nm.match(/\.pdf$/i)?'📄':'📷';return'<div class="doc-item" onclick="viewDocument(\''+encodeURIComponent(doc.url||'')+'\',\''+nm.replace(/'/g,"\\'")+'\')">'+'<span class="di-icon">'+ic+'</span><div class="di-name">'+nm+'</div><span class="di-view">👁</span></div>'}).join(''):'<p style="color:var(--text3);text-align:center;padding:20px;">'+t('no_docs')+'</p>'}catch{}}
+function viewDocument(url,name){if(!url){toast('error','❌');return}document.getElementById('docViewTitle').textContent='📄 '+name;document.getElementById('docViewImg').src=decodeURIComponent(url);document.getElementById('docViewModal').style.display='flex'}
+function closeDocView(){document.getElementById('docViewModal').style.display='none'}
+
+function loadInitialData(){if(!companyData)return;document.getElementById('initNip').textContent=companyData.nip||'—';document.getElementById('initCompany').textContent=companyData.company_name||'—';document.getElementById('initType').textContent=companyData.typ_company||'—';document.getElementById('initTaxForm').textContent=companyData.tax_form||'—';document.getElementById('initZusMode').textContent=companyData.zus_mode||'—';document.getElementById('initChorobowe').textContent=companyData.chorobowe?'✅':'❌';document.getElementById('initPkd').textContent=companyData.pkd||'—';document.getElementById('initVat').textContent=companyData.vat_type||'—';document.getElementById('initUmowa').textContent=companyData.umowa_o_prace?'✅ '+(companyData.umowa_kwota||0)+' zł':'❌'}
+function loadTariffs(){if(!companyData)return;const t=companyData.tariff||'SOLO';document.getElementById('curTariff').textContent=t;document.getElementById('curPrice').textContent=companyData.price?companyData.price+' zł':'0 zł';document.querySelectorAll('.tariff-card').forEach(c=>c.classList.remove('current'));document.getElementById('tariff'+t.charAt(0)+t.slice(1).toLowerCase())?.classList.add('current')}
+
+function setInvoiceType(type,btn){currentInvoiceType=type;document.querySelectorAll('.toggle-opt').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+function calcNetto(){const brutto=parseFloat(document.getElementById('invAmount').value)||0;const rate=parseInt(document.getElementById('invVatRate').value)||0;const incl=document.getElementById('invVatIncluded').checked;let netto,vat;if(incl&&rate>0){netto=brutto/(1+rate/100);vat=brutto-netto}else{netto=brutto;vat=brutto*rate/100}document.getElementById('nettoDisplay').innerHTML='Netto: <strong>'+netto.toFixed(2)+' zł</strong> | VAT: <strong>'+vat.toFixed(2)+' zł</strong>'}
+async function lookupNip(){const nip=document.getElementById('invNip').value.trim();if(nip.length!==10){toast('error','NIP: 10');return}try{toast('info','🔍');const d=await api('lookup-nip',{nip});if(d.company_name){document.getElementById('invContractor').value=d.company_name;toast('success','✅')}else toast('error','❌')}catch{toast('error','❌')}}
+async function invoiceAction(action){const d={nip:companyNip,type:currentInvoiceType,contractor:document.getElementById('invContractor').value.trim(),contractor_nip:document.getElementById('invNip').value.trim(),amount:document.getElementById('invAmount').value.trim(),vat_rate:document.getElementById('invVatRate').value,purpose:document.getElementById('invPurpose').value.trim(),due_date:document.getElementById('invDueDate').value,pay_type:document.getElementById('invPayType').value,action};if(!d.contractor||!d.amount){toast('error','❌');return}if(action==='email'){pendingInvoiceData=d;document.getElementById('modalEmail').value=companyData?.email||'';document.getElementById('emailModal').style.display='flex';return}await submitInvoice(d,action)}
+async function confirmSendEmail(){const email=document.getElementById('modalEmail').value.trim();if(!email||!email.includes('@')){toast('error','❌');return}closeEmailModal();pendingInvoiceData.send_to_email=email;await submitInvoice(pendingInvoiceData,'email')}
+function closeEmailModal(){document.getElementById('emailModal').style.display='none'}
+async function submitInvoice(d,action){const btns=document.querySelectorAll('.invoice-actions .btn');btns.forEach(b=>b.disabled=true);toast('info','⏳');try{const r=await api('create-invoice',d);if(r.success||r.doc_name){toast('success','✅ '+(r.doc_name||''))}else throw 0}catch{toast('error','❌')}btns.forEach(b=>b.disabled=false)}
+document.getElementById('invDueDate').value=new Date(Date.now()+14*864e5).toISOString().split('T')[0];
+
+async function sendTextMessage(){const inp=document.getElementById('chatInput'),txt=inp.value.trim();if(!txt)return;inp.value='';appendMsg('client',txt);showTyping();try{const r=await api('send-message',{nip:companyNip,telegram_id:telegramId,type:'text',text:txt},30000);hideTyping();if(r.reply)appendMsg('manager',r.reply)}catch{hideTyping();toast('error','❌')}}
+let mediaRecorder=null,audioChunks=[],voiceInterval=null,voiceSeconds=0,isRecording=false;
+async function toggleVoice(){if(isRecording){stopVoice();return}try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});mediaRecorder=new MediaRecorder(stream);audioChunks=[];mediaRecorder.ondataavailable=e=>{if(e.data.size>0)audioChunks.push(e.data)};mediaRecorder.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());if(audioChunks.length===0)return;const blob=new Blob(audioChunks,{type:'audio/webm'});await sendVoice(blob)};mediaRecorder.start();isRecording=true;voiceSeconds=0;document.getElementById('voiceBtn').classList.add('recording');const timer=document.getElementById('voiceTimer');timer.style.display='block';voiceInterval=setInterval(()=>{voiceSeconds++;timer.textContent='🔴 '+Math.floor(voiceSeconds/60)+':'+String(voiceSeconds%60).padStart(2,'0')},1000)}catch{toast('error','❌🎤')}}
+function stopVoice(){if(mediaRecorder&&mediaRecorder.state==='recording')mediaRecorder.stop();isRecording=false;document.getElementById('voiceBtn').classList.remove('recording');document.getElementById('voiceTimer').style.display='none';clearInterval(voiceInterval)}
+async function sendVoice(blob){if(voiceSeconds<1)return;appendMsg('client','🎤 ('+voiceSeconds+'s)');showTyping();try{const fd=new FormData();fd.append('audio',blob,'voice.webm');fd.append('nip',companyNip);fd.append('telegram_id',telegramId);fd.append('type','voice');fd.append('duration',voiceSeconds.toString());const res=await fetch(API+'/send-message',{method:'POST',body:fd});const data=await res.json().catch(()=>({}));hideTyping();if(data.reply)appendMsg('manager',data.reply)}catch{hideTyping();toast('error','❌')}}
+function appendMsg(from,text){const box=document.getElementById('chatMessages');const ph=box.querySelector('p');if(ph)ph.remove();box.insertAdjacentHTML('beforeend','<div class="msg '+from+'"><div class="msg-sender">'+(from==='client'?'👤':'🤖')+'</div><div>'+text.replace(/</g,'&lt;')+'</div><div class="msg-time">'+new Date().toLocaleTimeString(currentLang,{hour:'2-digit',minute:'2-digit'})+'</div></div>');box.scrollTop=box.scrollHeight}
+function showTyping(){const box=document.getElementById('chatMessages');box.insertAdjacentHTML('beforeend','<div class="msg manager" id="typingMsg"><div class="msg-typing"><span></span><span></span><span></span></div></div>');box.scrollTop=box.scrollHeight}
+function hideTyping(){document.getElementById('typingMsg')?.remove()}
+
+function showPromo(){document.getElementById('promoPopup').style.display='block'}
+function closePromo(){document.getElementById('promoPopup').style.display='none'}
+function promoAction(){closePromo();showScreen('page-info')}
+function showNotifications(){toast('info','🔔')}
+
+function toast(type,msg){document.querySelectorAll('.alert-toast').forEach(t=>t.remove());const el=document.createElement('div');el.className='alert-toast '+type;el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),3000)}
+function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+
+document.getElementById('langBtn').textContent=currentLang.toUpperCase();
+applyTranslations();
+updateStatusBar();
+setTimeout(()=>codeDigits[0]?.focus(),300);
+</script>
+</body>
+</html>
