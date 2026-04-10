@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Płatność zakończona - AI Finanse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'DM Sans', -apple-system, sans-serif; }
+        body { 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%);
+            padding: 20px;
+        }
+        .card { 
+            background: white; 
+            padding: 48px 32px; 
+            border-radius: 24px; 
+            text-align: center; 
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+        }
+        .icon { 
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #00C48C 0%, #00A67E 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+        }
+        h1 { 
+            font-size: 26px; 
+            color: #1A1D21; 
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        p { 
+            color: #6B7280; 
+            font-size: 16px; 
+            line-height: 1.6; 
+            margin-bottom: 32px; 
+        }
+        .features {
+            background: #F0F2F5;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .features-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6B7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 15px;
+            color: #1A1D21;
+        }
+        .feature::before {
+            content: '✓';
+            color: #00C48C;
+            font-weight: 700;
+        }
+        .btn { 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: #0066FF; 
+            color: white; 
+            padding: 18px 36px; 
+            border-radius: 12px; 
+            text-decoration: none; 
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .btn:hover { 
+            background: #0052CC;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,102,255,0.3);
+        }
+        .session-id { 
+            font-size: 11px; 
+            color: #9CA3AF; 
+            margin-top: 24px; 
+            word-break: break-all;
+            padding: 12px;
+            background: #F9FAFB;
+            border-radius: 8px;
+        }
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: #9CA3AF;
+            letter-spacing: 1px;
+            margin-bottom: 32px;
+        }
+        .logo span { color: #E5E7EB; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">AI <span>|</span> FINANSE</div>
+        <div class="icon">✓</div>
+        <h1>Dziękujemy za płatność!</h1>
+        <p>Twoja subskrypcja została aktywowana. Możesz teraz korzystać ze wszystkich funkcji AI Finanse.</p>
+        
+        <div class="features">
+            <div class="features-title">Twój pakiet zawiera</div>
+            <div class="feature">Wystawianie faktur</div>
+            <div class="feature">Przesyłanie dokumentów</div>
+            <div class="feature">Deklaracje podatkowe</div>
+            <div class="feature">AI Asystent</div>
+            <div class="feature">Środki trwałe</div>
+            <div class="feature">Powiadomienia e-mail</div>
+        </div>
+        
+        <a href="https://t.me/AIFinanseBot" class="btn">
+            📱 Otwórz aplikację
+        </a>
+        
+        <div class="session-id" id="sessionInfo"></div>
+    </div>
+    
+    <script>
+        // Получаем session_id из URL для отладки
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get('session');
+        if (sessionId) {
+            document.getElementById('sessionInfo').textContent = 'ID transakcji: ' + sessionId.substring(0, 30) + '...';
+            
+            // Опционально: отправить на бэкенд для верификации
+            // fetch('https://n8n.ai-finanse.pl/webhook/verify-payment', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ session_id: sessionId })
+            // });
+        }
+    </script>
+</body>
+</html>
